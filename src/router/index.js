@@ -26,6 +26,19 @@ const routes = [
     path: "/post",
     name: "post",
     component: () => import("@/views/PostView.vue"),
+    redirect: { name: "article-list" },
+    children: [
+      {
+        path: "list",
+        name: "article-list",
+        component: () => import("@/components/post/PostList.vue"),
+      },
+      {
+        path: "detail",
+        name: "article-detail",
+        component: () => import("@/components/post/PostDetail.vue"),
+      },
+    ],
   },
 ];
 

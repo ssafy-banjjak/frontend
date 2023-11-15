@@ -30,10 +30,12 @@
 
     <v-spacer></v-spacer>
 
-    <router-link to="short" class="mx-2">반짝</router-link>
-    <router-link to="post" class="mx-2">반짝 여행</router-link>
-    <router-link to="attraction" class="mx-2">여행지 검색</router-link>
-    <router-link to="mypage" class="mx-2">마이페이지</router-link>
+    <router-link :to="{ name: 'short' }" class="mx-2">반짝</router-link>
+    <router-link :to="{ name: 'post' }" class="mx-2">반짝 여행</router-link>
+    <router-link :to="{ name: 'attraction' }" class="mx-2"
+      >여행지 검색</router-link
+    >
+    <router-link :to="{ name: 'mypage' }" class="mx-2">마이페이지</router-link>
   </v-app-bar>
 </template>
 
