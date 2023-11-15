@@ -13,9 +13,31 @@ const routes = [
     component: () => import("@/views/ShortView.vue"),
   },
   {
-    path: "/mypage",
-    name: "mypage",
-    component: () => import("@/views/MyPageView.vue"),
+    path: "/user",
+    name: "user",
+    component: () => import("@/views/UserView.vue"),
+    children: [
+      {
+        path: "signup",
+        name: "signup",
+        component: () => import("@/components/user/UserSignup.vue"),
+      },
+      {
+        path: "login",
+        name: "login",
+        component: () => import("@/components/user/UserLogin.vue"),
+      },
+      {
+        path: "mypage",
+        name: "mypage",
+        component: () => import("@/components/user/UserMyPage.vue"),
+      },
+      {
+        path: "login",
+        name: "login",
+        component: () => import("@/components/user/UserLogin.vue"),
+      },
+    ],
   },
   {
     path: "/attraction",
