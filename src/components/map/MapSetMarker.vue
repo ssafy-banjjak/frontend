@@ -1,9 +1,37 @@
 <script setup>
+import { watch } from "vue";
 import { ref, onMounted } from "vue";
 
 var map;
-// const positions = ref([]);
+var geocoder;
+var content =
+  '<div class="wrap">' +
+  '    <div class="info">' +
+  '        <div class="title">' +
+  "            카카오 스페이스닷원" +
+  '            <div class="close" onclick="closeOverlay()" title="닫기"></div>' +
+  "        </div>" +
+  '        <div class="body">' +
+  '            <div class="img">' +
+  '                <img src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/thumnail.png" width="73" height="70">' +
+  "           </div>" +
+  '            <div class="desc">' +
+  '                <div class="ellipsis">제주특별자치도 제주시 첨단로 242</div>' +
+  '                <div class="jibun ellipsis">(우) 63309 (지번) 영평동 2181</div>' +
+  '                <div><a href="https://www.kakaocorp.com/main" target="_blank" class="link">홈페이지</a></div>' +
+  "            </div>" +
+  "        </div>" +
+  "    </div>" +
+  "</div>";
 const markers = ref([]);
+
+watch(
+  () => markers.value,
+  () => {
+    drawLine(map);
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   if (window.kakao && window.kakao.maps) {
@@ -26,12 +54,39 @@ const initMap = () => {
     level: 3,
   };
   map = new kakao.maps.Map(container, options);
+  geocoder = new kakao.maps.services.Geocoder();
   kakao.maps.event.addListener(map, "click", function (mouseEvent) {
     // 클릭한 위치에 마커를 표시합니다
-    addMarker(mouseEvent.latLng);
-    console.log(markers.value);
+    if (markers.value.length > 4) {
+      alert("5개 이상 선택할 수 없습니다!");
+    } else {
+      addMarker(mouseEvent.latLng);
+    }
   });
 };
+
+// 마커 배열로 선을 그리는 함수
+function drawLine(map) {
+  var linePath = [];
+
+  for (let i = 0; i < markers.value.length; i++) {
+    const element = markers.value[i];
+    linePath.push(
+      new kakao.maps.LatLng(
+        element.getPosition().getLat(),
+        element.getPosition().getLng()
+      )
+    );
+  }
+  var polyline = new kakao.maps.Polyline({
+    path: linePath, // 선을 구성하는 좌표배열 입니다
+    strokeWeight: 5, // 선의 두께 입니다
+    strokeColor: "#FFAE00", // 선의 색깔입니다
+    strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+    strokeStyle: "solid", // 선의 스타일입니다
+  });
+  polyline.setMap(map);
+}
 
 function addMarker(position) {
   // 마커를 생성합니다
@@ -49,7 +104,7 @@ function addMarker(position) {
 // 배열에 추가된 마커들을 지도에 표시하거나 삭제하는 함수입니다
 function setMarkers(map) {
   for (var i = 0; i < markers.value.length; i++) {
-    markers[i].setMap(map);
+    markers.value[i].setMap(map);
   }
 }
 
@@ -59,19 +114,21 @@ function showMarkers() {
 }
 
 // "마커 감추기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에서 삭제하는 함수입니다
-function hideMarkers() {
+function deleteMarkers() {
   setMarkers(null);
+  drawLine(null);
+  markers.value.length = 0;
 }
 </script>
 
 <template>
   <div id="map">
-    <p>
-      <button @click="hideMarkers">마커 감추기</button>
-      <button @click="showMarkers">마커 보이기</button>
-    </p>
     <em>클릭한 위치에 마커가 표시됩니다!</em>
   </div>
+  <p>
+    <button @click="deleteMarkers">마커 감추기</button>
+    <button @click="showMarkers">마커 보이기</button>
+  </p>
 </template>
 
 <style scoped>
