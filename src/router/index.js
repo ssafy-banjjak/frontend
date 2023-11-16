@@ -1,11 +1,12 @@
 // Composables
 import { createRouter, createWebHistory } from "vue-router";
+import HomeViewVue from "@/views/HomeView.vue";
 
 const routes = [
   {
     path: "/",
     name: "home",
-    component: () => import("@/views/HomeView.vue"),
+    component: HomeViewVue,
   },
   {
     path: "/short",

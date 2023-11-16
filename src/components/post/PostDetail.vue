@@ -30,6 +30,18 @@ const tripSpots = [
     place: "장소5",
   },
 ];
+
+// let latPath = ref([]);
+
+// watch(
+//   () => latPath.value.length,
+//   () => {},
+//   { deep: true }
+// );
+
+const latCallback = function (latPath) {
+  // console.log(latPath.value[0][0]);
+};
 </script>
 
 <template>
@@ -59,7 +71,7 @@ const tripSpots = [
           </v-row>
           <!-- 오른쪽 아래 -->
           <div style="margin: 20px">
-            <MapSetMarker></MapSetMarker>
+            <MapSetMarker @lat-path="latCallback"></MapSetMarker>
           </div>
         </v-col>
       </v-row>
