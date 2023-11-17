@@ -25,3 +25,14 @@ a:hover,
 a:active {
   text-decoration: none;
 }
+
+.shadow {
+  box-shadow: 9px 8px 22px -1px rgba(0, 0, 0, 0.75);
+  -webkit-box-shadow: 9px 8px 22px -1px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: 9px 8px 22px -1px rgba(0, 0, 0, 0.75);
+}
+
+.main-color {
+  // background: #fffae0;
+  background-color: #e0f4ff;
+}

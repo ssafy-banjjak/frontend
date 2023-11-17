@@ -10,11 +10,15 @@ const user = ref({
 const signup = () => {
   router.push({ name: "signup" });
 };
+
+const login = () => {
+  router.push({ name: "home" });
+};
 </script>
 
 <template>
   <div class="container">
-    <v-card width="400" title="로그인">
+    <v-card class="shadow" width="400" title="로그인">
       <v-container>
         <v-text-field
           v-model="user.username"
@@ -36,7 +40,7 @@ const signup = () => {
       <v-card-actions>
         <v-spacer></v-spacer>
 
-        <v-btn color="success">
+        <v-btn color="success" @click="login">
           로그인
           <v-icon icon="mdi-chevron-right" end></v-icon>
         </v-btn>
@@ -55,7 +59,6 @@ const signup = () => {
 
 <style scoped>
 .container {
-  background: #fffae0;
   height: 100%;
   width: 100%;
   display: flex;
