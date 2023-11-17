@@ -2,7 +2,43 @@
 import { watch } from "vue";
 import { ref, onMounted, defineEmits } from "vue";
 
-const emit = defineEmits(["latPath"]);
+const emit = defineEmits(["travelPath"]);
+const props = defineProps(["deleteIdx"]);
+let idx;
+let apiData = [
+  {
+    title: "국립 청태산자연휴양림",
+    address: "강원도 횡성군 둔내면 청태산로 610",
+    img1: "http://tong.visitkorea.or.kr/cms/resource/21/2657021_image2_1.jpg",
+    img2: "http://tong.visitkorea.or.kr/cms/resource/21/2657021_image3_1.jpg",
+    lat: "37.52251412000000000",
+    lng: "128.29191150000000000",
+  },
+  {
+    title: "토함산자연휴양림",
+    address: "경상북도 경주시 양북면 불국로 1208-45",
+    img1: "",
+    img2: "",
+    lat: "35.76195770000000000",
+    lng: "129.36550370000000000",
+  },
+  {
+    title: "비슬산자연휴양림",
+    address: "대구광역시 달성군 유가읍 일연선사길 61",
+    img1: "http://tong.visitkorea.or.kr/cms/resource/62/219162_image2_1.jpg",
+    img2: "http://tong.visitkorea.or.kr/cms/resource/62/219162_image3_1.jpg",
+    lat: "35.69138039000000000",
+    lng: "128.51597740000000000",
+  },
+  {
+    title: "불정자연휴양림",
+    address: "경상북도 문경시 불정길 180	(불정동)",
+    img1: "http://tong.visitkorea.or.kr/cms/resource/83/1070183_image2_1.jpg",
+    img2: "http://tong.visitkorea.or.kr/cms/resource/83/1070183_image3_1.jpg",
+    lat: "36.61882624000000000",
+    lng: "128.13426590000000000",
+  },
+];
 
 let map;
 let geocoder;
@@ -11,18 +47,31 @@ let geocoder;
 let polylinePath = [];
 
 // 좌표 배열
-const latPath = ref([]);
+let latPath = [];
 
 // 마커 객체 배열
 let markers = [];
 
-// 커스텀 오버레이 배열
-let overlayPath = [];
+// 선택 여행지 배열
+let travels = [];
+
+// emit을 위한 선택 여행지 배열
+let travelPath = ref([]);
 
 watch(
-  () => latPath.value,
+  () => travelPath,
   () => {
-    emit("latPath", latPath);
+    emit("travelPath", travelPath);
+    // console.log(`asd${idx}`);
+  },
+  { deep: true }
+);
+
+watch(
+  () => props.deleteIdx,
+  () => {
+    idx = props.deleteIdx;
+    chooseDel(idx);
   },
   { deep: true }
 );
@@ -44,26 +93,41 @@ onMounted(() => {
 const initMap = () => {
   const container = document.getElementById("map");
   const options = {
-    center: new kakao.maps.LatLng(33.450701, 126.570667),
-    level: 3,
+    center: new kakao.maps.LatLng(36.62166041487402, 128.70939218494755),
+    level: 12,
   };
   map = new kakao.maps.Map(container, options);
   geocoder = new kakao.maps.services.Geocoder();
-  kakao.maps.event.addListener(map, "click", function (mouseEvent) {
-    // 클릭한 위치에 마커를 표시합니다
-    if (markers.length > 4) {
-      alert("5개 이상 선택할 수 없습니다!");
-    } else {
-      latPath.value.push([mouseEvent.latLng.Ma, mouseEvent.latLng.La]);
-      addMarker(mouseEvent.latLng);
-      if (latPath.value.length >= 2) {
-        setPolyline(mouseEvent.latLng.Ma, mouseEvent.latLng.La);
-      }
-    }
+
+  kakao.maps.event.addListener(map);
+
+  window.oncontextmenu = function () {
+    return false;
+  };
+
+  apiData.forEach((data) => {
+    addMarker(data);
+    // if (latPath.length >= 2) {
+    //   setPolyline(data.lat, data.lng);
+    // }
   });
+
+  // kakao.maps.event.addListener(map, "click", function (mouseEvent) {
+  //   // 클릭한 위치에 마커를 표시합니다
+  //   if (markers.length > 4) {
+  //     alert("5개 이상 선택할 수 없습니다!");
+  //   } else {
+  //     console.log(mouseEvent.latLng);
+  //     latPath.push([mouseEvent.latLng.Ma, mouseEvent.latLng.La]);
+  //     addMarker(mouseEvent.latLng);
+  //     if (latPath.length >= 2) {
+  //       setPolyline(mouseEvent.latLng.Ma, mouseEvent.latLng.La);
+  //     }
+  //   }
+  // });
 };
 
-function addOverlay(marker) {
+function addOverlay(marker, data) {
   let content = document.createElement("div");
   content.className = "wrap";
 
@@ -72,12 +136,43 @@ function addOverlay(marker) {
 
   let title = document.createElement("div");
   title.className = "title";
+  title.appendChild(document.createTextNode(data.title));
 
   let closeDiv = document.createElement("div");
   closeDiv.className = "close";
+  closeDiv.onclick = function () {
+    overlay.setMap(null);
+  };
+
+  let body = document.createElement("div");
+  body.className = "body";
+
+  let imgDiv = document.createElement("div");
+  imgDiv.className = "img";
+
+  let img = document.createElement("img");
+  img.src = data.img1;
+  img.width = 73;
+  img.height = 70;
+
+  let desc = document.createElement("div");
+  desc.className = "desc";
+
+  let ellipsis = document.createElement("div");
+  ellipsis.className = "ellipsis";
+  ellipsis.appendChild(document.createTextNode(data.address));
+
+  desc.appendChild(ellipsis);
+  imgDiv.appendChild(img);
+
+  body.appendChild(imgDiv);
+  body.appendChild(desc);
 
   title.appendChild(closeDiv);
+
   info.appendChild(title);
+  info.appendChild(body);
+
   content.appendChild(info);
 
   var overlay = new kakao.maps.CustomOverlay({
@@ -86,14 +181,29 @@ function addOverlay(marker) {
     position: marker.getPosition(),
   });
 
-  overlayPath.push(overlay);
-
   function closeOverlay() {
     this.overlay.setMap(null);
   }
 
-  kakao.maps.event.addListener(marker, "click", function () {
-    overlay.setMap(map);
+  // kakao.maps.event.addListener(marker, "click", function () {
+  //   overlay.setMap(map);
+  // });
+
+  kakao.maps.event.addListener(marker, "mousedown", function (e) {
+    var isRightButton;
+    e = e || window.event;
+
+    if ("which" in e)
+      // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+      isRightButton = e.which == 3;
+    else if ("button" in e)
+      // IE, Opera
+      isRightButton = e.button == 2;
+
+    if (isRightButton) {
+      overlay.setMap(map);
+      e.stopPropagation();
+    }
   });
 }
 
@@ -103,14 +213,14 @@ function setPolyline(lat, lng) {
   var tmpLine = [
     line,
     new kakao.maps.LatLng(
-      latPath.value[latPath.value.length - 2][0],
-      latPath.value[latPath.value.length - 2][1]
+      latPath[latPath.length - 2][0],
+      latPath[latPath.length - 2][1]
     ),
   ];
   var polyline = new kakao.maps.Polyline({
     path: tmpLine, // 선을 구성하는 좌표배열 입니다
     strokeWeight: 5, // 선의 두께 입니다
-    strokeColor: "#FFAE00", // 선의 색깔입니다
+    strokeColor: "#FF0000", // 선의 색깔입니다
     strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
     strokeStyle: "solid", // 선의 스타일입니다
   });
@@ -129,42 +239,78 @@ function deleteLine() {
 /* 폴리라인 함수 끝 */
 
 /* 마커 함수 시작 */
-function addMarker(position) {
+
+function addMarker(data) {
+  let position = new kakao.maps.LatLng(data.lat, data.lng);
+
   var marker = new kakao.maps.Marker({
     position: position,
   });
+
+  kakao.maps.event.addListener(marker, "mousedown", function (e) {
+    var isRightButton;
+    e = e || window.event;
+
+    if ("which" in e) {
+      // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+      isRightButton = e.which == 3;
+    } else if ("button" in e) {
+      // IE, Opera
+      isRightButton = e.button == 2;
+    }
+
+    if (!isRightButton) {
+      if (travels.length > 5) {
+        alert("5개까지 등록할 수 있습니다!");
+        e.stopPropagation();
+      } else {
+        if (travels.includes(data)) {
+          alert("중복된 여행지 입니다!");
+          e.stopPropagation();
+        } else {
+          latPath.push([data.lat, data.lng]);
+          if (latPath.length >= 2) {
+            setPolyline(data.lat, data.lng);
+          }
+          travels.push(data);
+          travelPath.value.push(data);
+        }
+      }
+    }
+  });
+
   marker.setMap(map);
 
-  addOverlay(marker);
+  addOverlay(marker, data);
 
   markers.push(marker);
-}
-
-function setMarkers(map) {
-  for (let i = 0; i < markers.length; i++) {
-    markers[i].setMap(map);
-  }
-}
-
-function deleteMarkers() {
-  setMarkers(null);
-  markers = [];
 }
 
 /* 마커 함수 끝 */
 
 function deleteMap() {
-  deleteMarkers();
   deleteLine();
-  latPath.value.length = 0;
+  latPath = [];
+  travels = [];
+  travelPath.value.length = 0;
+}
+
+function chooseDel(idx) {
+  console.log(polylinePath, " ", idx);
+  if (latPath.length > 1) {
+    polylinePath[idx - 1].setMap(null);
+    polylinePath.splice(idx - 1, 1);
+  }
+  latPath.splice(idx, 1);
+  travels.splice(idx, 1);
+  travelPath.value.splice(idx, 1);
 }
 </script>
 
 <template>
   <div id="map"></div>
   <p>
-    <button @click="deleteMap">마커 감추기</button>
-    <button @click="showMarkers">마커 보이기</button>
+    <button @click="deleteMap">선택한 여행지 초기화</button>
   </p>
 </template>
 

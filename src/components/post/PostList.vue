@@ -41,6 +41,10 @@ function moveArticle(articleno) {
   router.push({ name: "article-detail", params: { articleno } });
 }
 
+function moveWrite() {
+  router.push({ name: "article-write" });
+}
+
 // const getArticleList = () => {
 //   console.log("서버에서 글목록 얻어오자!!!", param.value);
 //   // API 호출
@@ -52,9 +56,6 @@ function moveArticle(articleno) {
 //   });
 // };
 
-const getText = (data) => {
-  console.log(data);
-};
 const headers = ref([
   { text: "글번호", value: "articleNo" },
   { text: "제목", value: "title" },
@@ -136,7 +137,7 @@ const articles = [
           <v-col align-self="start">
             <v-fab-transition>
               <v-btn
-                @click="movePage('/write')"
+                @click="moveWrite"
                 color="blue-grey darken-1"
                 style="width: 100%; height: 52px"
               >

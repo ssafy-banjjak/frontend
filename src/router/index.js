@@ -35,9 +35,9 @@ const routes = [
         component: () => import("@/components/post/PostList.vue"),
       },
       {
-        path: "detail",
-        name: "article-detail",
-        component: () => import("@/components/post/PostDetail.vue"),
+        path: "write",
+        name: "article-write",
+        component: () => import("@/components/post/PostWrite.vue"),
       },
     ],
   },
