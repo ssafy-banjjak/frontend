@@ -3,7 +3,9 @@ import PostFormItem from "./item/PostFormItem.vue";
 </script>
 
 <template>
-  <PostFormItem></PostFormItem>
+  <div>
+    <PostFormItem></PostFormItem>
+  </div>
 </template>
 
 <style scoped></style>
