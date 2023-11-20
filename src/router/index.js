@@ -1,6 +1,7 @@
 // Composables
 import { createRouter, createWebHistory } from "vue-router";
 import HomeViewVue from "@/views/HomeView.vue";
+import AttractionViewVue from "@/views/AttractionView.vue";
 
 const routes = [
   {
@@ -27,19 +28,34 @@ const routes = [
     path: "/post",
     name: "post",
     component: () => import("@/views/PostView.vue"),
-    redirect: { name: "article-list" },
+    redirect: { name: "post-list" },
     children: [
       {
         path: "list",
-        name: "article-list",
-        component: () => import("@/components/post/PostList.vue"),
+        name: "post-list",
+        component: () => import("@/components/post/asd.vue"),
+      },
+      {
+        path: "detail/:articleno",
+        name: "post-detail",
+        component: () => import("@/components/post/PostDetail.vue"),
       },
       {
         path: "write",
-        name: "article-write",
+        name: "post-write",
         component: () => import("@/components/post/PostWrite.vue"),
       },
+      {
+        path: "modify",
+        name: "post-modify",
+        component: () => import("@/components/post/PostModify.vue"),
+      },
     ],
+  },
+  {
+    path: "/attraction",
+    name: "attraction",
+    component: AttractionViewVue,
   },
 ];
 

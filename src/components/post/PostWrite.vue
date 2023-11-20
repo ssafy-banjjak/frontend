@@ -1,3 +1,4 @@
+<style scoped></style>
 <script setup>
 import PostFormItem from "./item/PostFormItem.vue";
 </script>

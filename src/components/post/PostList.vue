@@ -1,12 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-// import { listArticle } from "@/assets/api/board";
-// import { mdiPencil } from "@mdi/js";
-
-import PostListItem from "../post/PostListItem.vue";
-// import Button from "../common/Button.vue";
-
+import "codemirror/lib/codemirror.css"; // codemirror style
 const route = useRoute();
 const router = useRouter();
 
@@ -33,28 +28,15 @@ const param = ref({
   word: "",
 });
 
-// onMounted(() => {
-//   getArticleList();
-// });
+function moveArticle(event, item) {
+  const articleno = item.item.articleNo;
 
-function moveArticle(articleno) {
-  router.push({ name: "article-detail", params: { articleno } });
+  router.push({ name: "post-detail", params: { articleno: articleno } });
 }
 
 function moveWrite() {
-  router.push({ name: "article-write" });
+  router.push({ name: "post-write" });
 }
-
-// const getArticleList = () => {
-//   console.log("서버에서 글목록 얻어오자!!!", param.value);
-//   // API 호출
-//   listArticle(param.value, ({ data }) => {
-//     console.log(data);
-//     articles.value = data.articles;
-//     currentPage.value = data.currentPage;
-//     totalPage.value = data.totalPageCount;
-//   });
-// };
 
 const headers = ref([
   { text: "글번호", value: "articleNo" },
@@ -150,11 +132,15 @@ const articles = [
           <v-col>
             <v-data-table
               class="elevation-1"
-              @click:row="moveArticle"
-              :items="articles"
               :headers="headers"
+              :items="articles"
+              item-key="articleNo"
+              @click:row="moveArticle"
             >
             </v-data-table>
+            <!-- <template slot="items" slot-scope="props">
+                <td>{{ props.item.articleNo }}</td>
+              </template> -->
           </v-col>
         </v-row>
       </v-card-text>

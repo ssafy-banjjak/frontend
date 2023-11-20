@@ -1,14 +1,31 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import MapSetMarker from "./MapSetMarker.vue";
-import PostEditor from "./PostEditor.vue";
+import Editor from "@toast-ui/editor";
+import "@toast-ui/editor/dist/toastui-editor.css"; // Editor style
+import "codemirror/lib/codemirror.css"; // codemirror style
+
+const router = useRouter();
 
 // 여행지 목록
 let travels = ref([]);
 
 let deleteIdx = ref(0);
+
+const editor = ref();
+
+const content = "";
+
+onMounted(() => {
+  editor.value = new Editor({
+    el: document.querySelector("#editor"),
+    previewStyle: "vertical",
+    height: "500px",
+    initialEditType: "wysiwyg",
+  });
+});
 
 const travelCallback = function (travelPath) {
   travels.value = travelPath.value;
@@ -17,12 +34,35 @@ const travelCallback = function (travelPath) {
 const changeIdx = function (idx) {
   deleteIdx.value = idx;
 };
+
+// 선택 지역을 받는 값
+const region = ref("");
+
+// 지역 선택 헤더
+const conditions = ref([
+  { text: "경기도", value: "article_no" },
+  { text: "서울특별시", value: "subject" },
+  { text: "강원도", value: "user_id" },
+  { text: "충청도", value: "user_id" },
+  { text: "경상도", value: "user_id" },
+  { text: "전라도", value: "user_id" },
+  { text: "대구광역시", value: "user_id" },
+  { text: "부산광역시", value: "user_id" },
+  { text: "울산광역시", value: "user_id" },
+]);
+
+function save() {
+  console.log(editor.value.getHTML());
+}
+
+function back() {
+  router.push({ name: "post-list" });
+}
 </script>
 
 <template>
   <v-container>
-    <v-card elevation="5" outlined width="100%"
-      >``
+    <v-card elevation="5" outlined width="100%" style="padding: 3%">
       <v-row>
         <v-col cols="3">
           <v-col v-for="(travel, idx) in travels" :key="idx">
@@ -47,30 +87,32 @@ const changeIdx = function (idx) {
         <v-col cols="9">
           <v-row>
             <v-col cols="3">
-              <v-sheet> 지역 </v-sheet>
+              <v-select
+                v-model="region"
+                label="지역"
+                :items="conditions"
+                item-title="text"
+                item-value="value"
+              ></v-select>
             </v-col>
             <v-col cols="9">
-              <v-sheet> 제목 </v-sheet>
+              <v-text-field label="제목" variant="underlined"></v-text-field>
             </v-col>
-          </v-row>
-          <!-- 오른쪽 아래 -->
-          <div style="margin: 20px">
+
             <MapSetMarker
               :delete-idx="deleteIdx"
               @travel-path="travelCallback"
             ></MapSetMarker>
-          </div>
-          <div style="margin: 20px">
-            <PostEditor></PostEditor>
-          </div>
-          <v-spacer></v-spacer>
-          <v-row>
-            <v-btn color="success">
-              <v-icon>mdi-content-save-all</v-icon>
-            </v-btn>
-            <v-btn color="grey darken-1">
-              <v-icon>mdi-arrow-left</v-icon>
-            </v-btn>
+            <div id="editor"></div>
+            <v-spacer></v-spacer>
+            <v-col>
+              <v-btn color="success" @click="save">
+                <v-icon>mdi-content-save-all</v-icon>
+              </v-btn>
+              <v-btn color="grey darken-1" @click="back">
+                <v-icon>mdi-arrow-left</v-icon>
+              </v-btn>
+            </v-col>
           </v-row>
         </v-col>
       </v-row>

@@ -1,6 +1,5 @@
 <script setup>
-import { watch } from "vue";
-import { ref, onMounted, defineEmits } from "vue";
+import { ref, onMounted, defineEmits, watch } from "vue";
 
 const emit = defineEmits(["travelPath"]);
 const props = defineProps(["deleteIdx"]);
@@ -107,24 +106,7 @@ const initMap = () => {
 
   apiData.forEach((data) => {
     addMarker(data);
-    // if (latPath.length >= 2) {
-    //   setPolyline(data.lat, data.lng);
-    // }
   });
-
-  // kakao.maps.event.addListener(map, "click", function (mouseEvent) {
-  //   // 클릭한 위치에 마커를 표시합니다
-  //   if (markers.length > 4) {
-  //     alert("5개 이상 선택할 수 없습니다!");
-  //   } else {
-  //     console.log(mouseEvent.latLng);
-  //     latPath.push([mouseEvent.latLng.Ma, mouseEvent.latLng.La]);
-  //     addMarker(mouseEvent.latLng);
-  //     if (latPath.length >= 2) {
-  //       setPolyline(mouseEvent.latLng.Ma, mouseEvent.latLng.La);
-  //     }
-  //   }
-  // });
 };
 
 function addOverlay(marker, data) {
@@ -181,13 +163,7 @@ function addOverlay(marker, data) {
     position: marker.getPosition(),
   });
 
-  function closeOverlay() {
-    this.overlay.setMap(null);
-  }
-
-  // kakao.maps.event.addListener(marker, "click", function () {
-  //   overlay.setMap(map);
-  // });
+  overlay.setMap(null);
 
   kakao.maps.event.addListener(marker, "mousedown", function (e) {
     var isRightButton;
@@ -308,19 +284,29 @@ function chooseDel(idx) {
 </script>
 
 <template>
-  <div id="map"></div>
-  <p>
-    <button @click="deleteMap">선택한 여행지 초기화</button>
-  </p>
+  <div class="map_wrap">
+    <div
+      id="map"
+      style="width: 100%; height: 100%; position: relative; overflow: hidden"
+    ></div>
+    <div class="custom_typecontrol radius_border">
+      <span id="initBtn" class="selected_btn" @click="deleteMap">초기화</span>
+    </div>
+  </div>
 </template>
 
-<style scoped>
+<style scoped></style>
+<style>
 #map {
   width: 100%;
   height: 700px;
 }
-</style>
-<style>
+.map_wrap {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 350px;
+}
 .wrap {
   position: absolute;
   left: 0;
@@ -333,10 +319,6 @@ function chooseDel(idx) {
   font-size: 12px;
   font-family: "Malgun Gothic", dotum, "돋움", sans-serif;
   line-height: 1.5;
-}
-.wrap * {
-  padding: 0;
-  margin: 0;
 }
 .wrap .info {
   width: 286px;
@@ -412,5 +394,48 @@ function chooseDel(idx) {
 }
 .info .link {
   color: #5085bb;
+}
+
+.custom_typecontrol {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  overflow: hidden;
+  width: 130px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
+  font-size: 12px;
+  font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+}
+.custom_typecontrol span {
+  display: block;
+  width: 65px;
+  height: 30px;
+  float: right;
+  text-align: center;
+  line-height: 30px;
+  cursor: pointer;
+}
+.custom_typecontrol .btn {
+  background: #fff;
+  background: linear-gradient(#fff, #e6e6e6);
+}
+.custom_typecontrol .btn:hover {
+  background: #f5f5f5;
+  background: linear-gradient(#f5f5f5, #e3e3e3);
+}
+.custom_typecontrol .btn:active {
+  background: #e6e6e6;
+  background: linear-gradient(#e6e6e6, #fff);
+}
+.custom_typecontrol .selected_btn {
+  color: #fff;
+  background: #425470;
+  background: linear-gradient(#425470, #5b6d8a);
+}
+.custom_typecontrol .selected_btn:hover {
+  color: #fff;
 }
 </style>
