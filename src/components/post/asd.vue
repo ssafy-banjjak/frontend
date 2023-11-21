@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
+import { listPost } from "@/api/post";
 import Button from "./item/Button.vue";
 
 const router = useRouter();
@@ -20,20 +21,32 @@ const options = ref({
   page: 1,
   itemsPerPage: 5,
 });
+
+const region = ref("");
 const footerOptions = ref([5, 10, 25]);
 const totalCount = ref(0);
 const loading = ref(false);
 const conditions = ref([
-  { text: "경기도", value: "1" },
-  { text: "서울특별시", value: "2" },
-  { text: "강원도", value: "3" },
-  { text: "충청도", value: "4" },
-  { text: "경상도", value: "5" },
-  { text: "전라도", value: "6" },
-  { text: "대구광역시", value: "7" },
-  { text: "부산광역시", value: "8" },
-  { text: "울산광역시", value: "9" },
+  { text: "서울특별시", value: "서울특별시" },
+  { text: "인천광역시", value: "인천광역시" },
+  { text: "대전광역시", value: "대전광역시" },
+  { text: "대구광역시", value: "대구광역시" },
+  { text: "광주광역시", value: "광주광역시" },
+  { text: "부산광역시", value: "부산광역시" },
+  { text: "울산광역시", value: "울산광역시" },
+  { text: "세종특별자치시", value: "세종시" },
+  { text: "경기도", value: "경기도" },
+  { text: "강원도", value: "강원도" },
+  { text: "충청북도", value: "충청북도" },
+  { text: "충청남도", value: "충청남도" },
+  { text: "경상북도", value: "경상북도" },
+  { text: "경상남도", value: "경상남도" },
+  { text: "전라북도", value: "전라북도" },
+  { text: "전라남도", value: "전라남도" },
+  { text: "제주특별자치도", value: "제주시" },
 ]);
+
+const posts = ref([]);
 
 const articles = [
   {
@@ -76,19 +89,33 @@ const articles = [
     date_time: "2023-11-14",
     place: "부산",
   },
-  {
-    articleNo: 5,
-    title: "제목5",
-    userid: "1234",
-    region: "부산",
-    content: "내용5",
-    recruits: "4",
-    date_time: "2023-11-14",
-    place: "부산",
-  },
 ];
 const schType = ref("");
 const schVal = ref("");
+
+onMounted(() => {
+  getPostList();
+})
+
+watch(
+  () => region.value,
+  () => {
+    getPostList();
+  },
+  { deep: true }
+);
+
+const getPostList = () => { 
+  listPost(
+    region.value,
+    ({ data }) => { 
+  posts.value = data.data;
+    },
+    (error) => { 
+      console.error(error);
+    }
+  )
+}
 
 // const getBoardDataFromAPI = async (page, itemsPerPage, sort) => {
 //   try {
@@ -167,9 +194,11 @@ function moveArticle(event, item) {
         <v-row>
           <v-col align-self="end" cols="12" md="2">
             <v-select
-              v-model="schType"
-              label="검색조건"
-              :items="conditions"
+              v-model="region"
+              label="지역"
+              :items="articles"
+              item-title="text"
+              item-value="value"
             ></v-select>
           </v-col>
           <v-col cols="12" md="8">
@@ -188,7 +217,7 @@ function moveArticle(event, item) {
               small
               block
               iconName="mdi-magnify"
-              btnName="Search"
+              btnName="검색"
             ></Button>
           </v-col>
         </v-row>
