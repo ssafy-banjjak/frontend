@@ -1,7 +1,14 @@
-<script setup></script>
+<script setup>
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const start = () => {
+  router.push({ name: "login" });
+};
+</script>
 
 <template>
-  <v-container style="height: 94vh; background-color: #fffae0">
+  <v-container style="height: 100%">
     <div
       class="d-flex justify-space-evenly align-center mb-6"
       style="height: 100%"
@@ -16,7 +23,10 @@
           <br />
           여행을 반짝으로 공유해보세요.
         </h3>
-        <button class="button justify-space-around align-center">
+        <button
+          class="shadow button justify-space-around align-center"
+          @click="start"
+        >
           시작하기
         </button>
       </div>
@@ -38,7 +48,7 @@
   width: 180px;
   height: 30px;
   border-radius: 10px;
-  background-color: #ff6f0f;
+  background-color: #ffeed9;
   box-sizing: border-box;
   text-decoration: none;
   padding: 14px 2rem;
