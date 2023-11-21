@@ -33,7 +33,7 @@ const routes = [
       {
         path: "list",
         name: "post-list",
-        component: () => import("@/components/post/asd.vue"),
+        component: () => import("@/components/post/PostList.vue"),
       },
       {
         path: "detail/:articleno",

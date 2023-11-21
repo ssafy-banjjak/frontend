@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import MapSetMarker from "./MapSetMarker.vue";
+import MapSetMarker from "./MapWrite.vue";
 import Editor from "@toast-ui/editor";
 import "@toast-ui/editor/dist/toastui-editor.css"; // Editor style
 import "codemirror/lib/codemirror.css"; // codemirror style
@@ -17,6 +17,15 @@ let deleteIdx = ref(0);
 const editor = ref();
 
 const content = "";
+
+const date = ref(new Date());
+watch(
+  () => date.value,
+  () => {
+    console.log(date.value);
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   editor.value = new Editor({
@@ -53,6 +62,7 @@ const conditions = ref([
 
 function save() {
   console.log(editor.value.getHTML());
+  content.value = editor.value.getHTML();
 }
 
 function back() {
@@ -98,6 +108,26 @@ function back() {
             <v-col cols="9">
               <v-text-field label="제목" variant="underlined"></v-text-field>
             </v-col>
+
+            <v-dialog width="400" height="600">
+              <template v-slot:activator="{ props }">
+                <!-- <v-btn v-bind="props" text="Open Dialog"> </v-btn> -->
+                <span v-bind="props" @click="isActive.value = false">asd</span>
+              </template>
+
+              <template v-slot:default="{ isActive }">
+                <v-card title="">
+                  <v-row justify="center">
+                    <v-date-picker v-model="date"></v-date-picker>
+                  </v-row>
+
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text="닫기" @click="isActive.value = false"></v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
 
             <MapSetMarker
               :delete-idx="deleteIdx"

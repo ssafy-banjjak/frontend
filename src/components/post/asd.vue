@@ -20,9 +20,7 @@ const options = ref({
   page: 1,
   itemsPerPage: 5,
 });
-const footerOptions = ref({
-  "items-per-page-options": [5, 10, 25, 50, 100],
-});
+const footerOptions = ref([5, 10, 25]);
 const totalCount = ref(0);
 const loading = ref(false);
 const conditions = ref([
@@ -36,6 +34,59 @@ const conditions = ref([
   { text: "부산광역시", value: "8" },
   { text: "울산광역시", value: "9" },
 ]);
+
+const articles = [
+  {
+    articleNo: 1,
+    title: "제목1",
+    userid: "1234",
+    region: "부산",
+    content: "내용1",
+    recruits: "4",
+    date_time: "2023-11-14",
+    place: "부산",
+  },
+  {
+    articleNo: 2,
+    title: "제목2",
+    userid: "1234",
+    region: "부산",
+    content: "내용2",
+    recruits: "4",
+    date_time: "2023-11-14",
+    place: "부산",
+  },
+  {
+    articleNo: 3,
+    title: "제목3",
+    userid: "1234",
+    region: "부산",
+    content: "내용3",
+    recruits: "4",
+    date_time: "2023-11-14",
+    place: "부산",
+  },
+  {
+    articleNo: 4,
+    title: "제목4",
+    userid: "1234",
+    region: "부산",
+    content: "내용4",
+    recruits: "4",
+    date_time: "2023-11-14",
+    place: "부산",
+  },
+  {
+    articleNo: 5,
+    title: "제목5",
+    userid: "1234",
+    region: "부산",
+    content: "내용5",
+    recruits: "4",
+    date_time: "2023-11-14",
+    place: "부산",
+  },
+];
 const schType = ref("");
 const schVal = ref("");
 
@@ -111,7 +162,7 @@ function moveArticle(event, item) {
 <template>
   <v-container>
     <v-card elevation="10" outlined width="100%" class="mx-auto">
-      <v-card-title> Board </v-card-title>
+      <v-card-title> 반짝 여행 </v-card-title>
       <v-card-text>
         <v-row>
           <v-col align-self="end" cols="12" md="2">
@@ -147,17 +198,12 @@ function moveArticle(event, item) {
               class="elevation-1"
               @click:row="onClickRow"
               :headers="headers"
-              :items="document"
+              :items="articles"
               :options="options"
               :server-items-length="totalCount"
-              :footer-props="footerOptions"
+              :items-per-page-options="footerOptions"
               :loading="loading"
             >
-              <template v-slot="items">
-                <td>{{ items.docNo }}</td>
-                <td>{{ items.title }}</td>
-                <td>{{ items.writer }}</td>
-              </template>
             </v-data-table>
           </v-col>
         </v-row>
@@ -165,7 +211,7 @@ function moveArticle(event, item) {
     </v-card>
     <v-fab-transition>
       <Button
-        @click="movePage('/write')"
+        @click="moveArticle"
         color="blue-grey darken-1"
         fab
         left
