@@ -1,4 +1,9 @@
-<script setup></script>
+<script setup>
+import { useUserStore } from "@/store/user";
+
+const userStore = useUserStore();
+console.log(userStore.isLogin);
+</script>
 
 <template>
   <!-- 임시용 -->

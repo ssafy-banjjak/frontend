@@ -1,4 +1,5 @@
 <script setup>
+import router from "@/router";
 import { ref } from "vue";
 
 const user = ref({
@@ -26,11 +27,15 @@ const regions = [
   "경상남도",
   "제주특별자치도",
 ];
+
+const signup = () => {
+  router.push({ name: "home" });
+};
 </script>
 
 <template>
   <div class="container">
-    <v-card width="400" title="회원가입">
+    <v-card width="400" title="회원가입" class="shadow">
       <v-container>
         <v-text-field
           v-model="user.username"
@@ -74,7 +79,7 @@ const regions = [
       <v-card-actions>
         <v-spacer></v-spacer>
 
-        <v-btn color="success">
+        <v-btn color="success" @click="signup">
           회원가입
 
           <v-icon icon="mdi-chevron-right" end></v-icon>
@@ -86,7 +91,6 @@ const regions = [
 
 <style scoped>
 .container {
-  background: #fffae0;
   height: 100%;
   width: 100%;
   display: flex;
