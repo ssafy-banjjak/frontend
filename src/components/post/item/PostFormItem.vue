@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import MapSetMarker from "./MapWrite.vue";
+import MapWrite from "../map/MapWrite.vue";
 import Editor from "@toast-ui/editor";
 import "@toast-ui/editor/dist/toastui-editor.css"; // Editor style
 import "codemirror/lib/codemirror.css"; // codemirror style
@@ -49,15 +49,23 @@ const region = ref("");
 
 // 지역 선택 헤더
 const conditions = ref([
-  { text: "경기도", value: "article_no" },
-  { text: "서울특별시", value: "subject" },
-  { text: "강원도", value: "user_id" },
-  { text: "충청도", value: "user_id" },
-  { text: "경상도", value: "user_id" },
-  { text: "전라도", value: "user_id" },
-  { text: "대구광역시", value: "user_id" },
-  { text: "부산광역시", value: "user_id" },
-  { text: "울산광역시", value: "user_id" },
+  { text: "서울특별시", value: "서울특별시" },
+  { text: "인천광역시", value: "인천광역시" },
+  { text: "대전광역시", value: "대전광역시" },
+  { text: "대구광역시", value: "대구광역시" },
+  { text: "광주광역시", value: "광주광역시" },
+  { text: "부산광역시", value: "부산광역시" },
+  { text: "울산광역시", value: "울산광역시" },
+  { text: "세종특별자치시", value: "세종시" },
+  { text: "경기도", value: "경기도" },
+  { text: "강원도", value: "강원도" },
+  { text: "충청북도", value: "충청북도" },
+  { text: "충청남도", value: "충청남도" },
+  { text: "경상북도", value: "경상북도" },
+  { text: "경상남도", value: "경상남도" },
+  { text: "전라북도", value: "전라북도" },
+  { text: "전라남도", value: "전라남도" },
+  { text: "제주특별자치도", value: "제주시" },
 ]);
 
 function save() {
@@ -129,10 +137,10 @@ function back() {
               </template>
             </v-dialog>
 
-            <MapSetMarker
+            <MapWrite
               :delete-idx="deleteIdx"
               @travel-path="travelCallback"
-            ></MapSetMarker>
+            ></MapWrite>
             <div id="editor"></div>
             <v-spacer></v-spacer>
             <v-col>

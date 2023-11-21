@@ -1,36 +1,55 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { detailPost } from "@/api/post";
 import Viewer from "@toast-ui/editor/dist/toastui-editor-viewer";
 import "codemirror/lib/codemirror.css"; // codemirror style
 import "@toast-ui/editor/dist/toastui-editor.css"; // Editor style
 
 import Button from "./item/Button.vue";
+import router from "@/router";
 const route = useRoute();
 
-const { articleno } = route.params;
+const { postId } = route.params;
 
-const content =
-  "<blockquote><p>asdasd</p><p>asd</p><ol><li><p>ggg</p></li><li><p>asd</p></li><li><p>asd</p></li></ol></blockquote>";
 const viewer = ref();
-onMounted(() => {
+const post = ref({});
+
+onMounted(async () => {
+  await detailPost(
+    postId,
+    ({ data }) => {
+      post.value = data.data;
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
   viewer.value = new Viewer({
     // ref="toastViewer"
     el: document.querySelector("#viewer"),
     height: "500px",
     initialEditType: "'wysiwyg'",
-    initialValue: content,
+    initialValue: post.value.content,
   });
 });
 
-const apiData = ref({
-  title: "국립 청태산자연휴양림",
-  address: "강원도 횡성군 둔내면 청태산로 610",
-  img1: "http://tong.visitkorea.or.kr/cms/resource/21/2657021_image2_1.jpg",
-  img2: "http://tong.visitkorea.or.kr/cms/resource/21/2657021_image3_1.jpg",
-  lat: "37.52251412000000000",
-  lng: "128.29191150000000000",
-});
+const getPostDetail = () => {
+  detailPost(
+    postId,
+    ({ data }) => {
+      post.value = data.data;
+      // console.log(post.value.content);
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+};
+
+const movePage = (param) => {
+  router.push({ name: "post-" + param });
+};
 </script>
 
 <template>
@@ -46,7 +65,7 @@ const apiData = ref({
               label="제목"
               readonly
               dense
-              :model-value="apiData.title"
+              :model-value="post.title"
               variant="underlined"
             />
           </v-col>
@@ -57,25 +76,25 @@ const apiData = ref({
               label="작성자"
               readonly
               dense
-              :model-value="apiData.address"
+              :model-value="post.username"
               variant="underlined"
             />
           </v-col>
           <v-col>
             <v-text-field
-              label="작성시간"
+              label="출발일"
               readonly
               dense
-              model-value="regDttm"
+              :model-value="post.dateTime"
               variant="underlined"
             />
           </v-col>
           <v-col>
             <v-text-field
-              label="조회수"
+              label="모집인원"
               readonly
               dense
-              model-value="view"
+              :model-value="post.recruits"
               variant="underlined"
             />
           </v-col>
@@ -177,7 +196,7 @@ const apiData = ref({
           btnName="Delete"
         ></Button>
         <Button
-          @click="movePage('/list')"
+          @click="movePage('list')"
           color="grey darken-1"
           rounded
           small

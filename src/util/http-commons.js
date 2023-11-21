@@ -8,6 +8,7 @@ function stationAxios() {
   const instance = axios.create({
     baseURL: VITE_ELECTRIC_CHARGING_STATION_URL,
     headers: {
+      'Access-Control-Allow-Origin': '*',
       "Content-Type": "application/json;charset=utf-8",
     },
   });
