@@ -126,7 +126,7 @@ const getPostList = () => {
 //   }
 // };
 
-function moveArticle() {
+function movePost() {
   router.push({ name: "post-write" });
 }
 
@@ -156,12 +156,12 @@ function moveDetail(event, item) {
               v-model="schVal"
               label="검색어"
               single-line
-              @keypress.enter.prevent="getBoardList"
+              @keypress.enter.prevent="getPostList"
             ></v-text-field>
           </v-col>
           <v-col align-self="center">
             <Button
-              @click="getBoardList"
+              @click="getPostList"
               color="blue-grey darken-1"
               rounded
               small
@@ -190,7 +190,7 @@ function moveDetail(event, item) {
     </v-card>
     <v-fab-transition>
       <Button
-        @click="moveArticle"
+        @click="movePost"
         color="blue-grey darken-1"
         fab
         left

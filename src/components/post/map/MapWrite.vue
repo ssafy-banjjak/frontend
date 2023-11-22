@@ -1,46 +1,18 @@
 <script setup>
 import { ref, onMounted, defineEmits, watch } from "vue";
+import { listAttraction } from "@/api/map";
 
 const emit = defineEmits(["travelPath"]);
-const props = defineProps(["deleteIdx"]);
+const props = defineProps(["deleteIdx", "region"]);
+
 let idx;
-let apiData = [
-  {
-    title: "국립 청태산자연휴양림",
-    address: "강원도 횡성군 둔내면 청태산로 610",
-    img1: "http://tong.visitkorea.or.kr/cms/resource/21/2657021_image2_1.jpg",
-    img2: "http://tong.visitkorea.or.kr/cms/resource/21/2657021_image3_1.jpg",
-    lat: "37.52251412000000000",
-    lng: "128.29191150000000000",
-  },
-  {
-    title: "토함산자연휴양림",
-    address: "경상북도 경주시 양북면 불국로 1208-45",
-    img1: "",
-    img2: "",
-    lat: "35.76195770000000000",
-    lng: "129.36550370000000000",
-  },
-  {
-    title: "비슬산자연휴양림",
-    address: "대구광역시 달성군 유가읍 일연선사길 61",
-    img1: "http://tong.visitkorea.or.kr/cms/resource/62/219162_image2_1.jpg",
-    img2: "http://tong.visitkorea.or.kr/cms/resource/62/219162_image3_1.jpg",
-    lat: "35.69138039000000000",
-    lng: "128.51597740000000000",
-  },
-  {
-    title: "불정자연휴양림",
-    address: "경상북도 문경시 불정길 180	(불정동)",
-    img1: "http://tong.visitkorea.or.kr/cms/resource/83/1070183_image2_1.jpg",
-    img2: "http://tong.visitkorea.or.kr/cms/resource/83/1070183_image3_1.jpg",
-    lat: "36.61882624000000000",
-    lng: "128.13426590000000000",
-  },
-];
+
+let attractions = ref([]);
+const param = ref({
+  region: "서울특별시",
+});
 
 let map;
-let geocoder;
 
 // 폴리라인객체 배열
 let polylinePath = [];
@@ -58,10 +30,22 @@ let travels = [];
 let travelPath = ref([]);
 
 watch(
+  () => attractions.value,
+  () => {
+    var moveLocation = new kakao.maps.LatLng(
+      attractions.value[0].latitude,
+      attractions.value[0].longitude
+    );
+
+    map.panTo(moveLocation);
+  },
+  { deep: true }
+);
+
+watch(
   () => travelPath,
   () => {
     emit("travelPath", travelPath);
-    // console.log(`asd${idx}`);
   },
   { deep: true }
 );
@@ -75,7 +59,31 @@ watch(
   { deep: true }
 );
 
-onMounted(() => {
+watch(
+  () => props.region,
+  async () => {
+    param.value.region = props.region;
+    await getAttraction();
+    deleteMarker();
+    deleteMap();
+    attractions.value.forEach((data) => {
+      addMarker(data);
+    });
+  },
+  { deep: true }
+);
+
+onMounted(async () => {
+  await listAttraction(
+    param.value,
+    ({ data }) => {
+      attractions.value = data.data;
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+
   if (window.kakao && window.kakao.maps) {
     initMap();
   } else {
@@ -92,11 +100,10 @@ onMounted(() => {
 const initMap = () => {
   const container = document.getElementById("map");
   const options = {
-    center: new kakao.maps.LatLng(36.62166041487402, 128.70939218494755),
-    level: 12,
+    center: new kakao.maps.LatLng(37.496573, 127.035546),
+    level: 9,
   };
   map = new kakao.maps.Map(container, options);
-  geocoder = new kakao.maps.services.Geocoder();
 
   kakao.maps.event.addListener(map);
 
@@ -104,10 +111,23 @@ const initMap = () => {
     return false;
   };
 
-  apiData.forEach((data) => {
+  attractions.value.forEach((data) => {
     addMarker(data);
   });
 };
+
+// 관광지 목록 가져오기
+async function getAttraction() {
+  await listAttraction(
+    param.value,
+    ({ data }) => {
+      attractions.value = data.data;
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+}
 
 function addOverlay(marker, data) {
   let content = document.createElement("div");
@@ -118,7 +138,7 @@ function addOverlay(marker, data) {
 
   let title = document.createElement("div");
   title.className = "title";
-  title.appendChild(document.createTextNode(data.title));
+  title.appendChild(document.createTextNode(data.name));
 
   let closeDiv = document.createElement("div");
   closeDiv.className = "close";
@@ -133,7 +153,7 @@ function addOverlay(marker, data) {
   imgDiv.className = "img";
 
   let img = document.createElement("img");
-  img.src = data.img1;
+  img.src = data.image;
   img.width = 73;
   img.height = 70;
 
@@ -217,7 +237,7 @@ function deleteLine() {
 /* 마커 함수 시작 */
 
 function addMarker(data) {
-  let position = new kakao.maps.LatLng(data.lat, data.lng);
+  let position = new kakao.maps.LatLng(data.latitude, data.longitude);
 
   var marker = new kakao.maps.Marker({
     position: position,
@@ -236,7 +256,7 @@ function addMarker(data) {
     }
 
     if (!isRightButton) {
-      if (travels.length > 5) {
+      if (travels.length > 4) {
         alert("5개까지 등록할 수 있습니다!");
         e.stopPropagation();
       } else {
@@ -244,9 +264,9 @@ function addMarker(data) {
           alert("중복된 여행지 입니다!");
           e.stopPropagation();
         } else {
-          latPath.push([data.lat, data.lng]);
+          latPath.push([data.latitude, data.longitude]);
           if (latPath.length >= 2) {
-            setPolyline(data.lat, data.lng);
+            setPolyline(data.latitude, data.longitude);
           }
           travels.push(data);
           travelPath.value.push(data);
@@ -262,6 +282,13 @@ function addMarker(data) {
   markers.push(marker);
 }
 
+function deleteMarker() {
+  markers.forEach((data) => {
+    data.setMap(null);
+  });
+  markers = [];
+}
+
 /* 마커 함수 끝 */
 
 function deleteMap() {
@@ -272,7 +299,6 @@ function deleteMap() {
 }
 
 function chooseDel(idx) {
-  console.log(polylinePath, " ", idx);
   if (latPath.length > 1) {
     polylinePath[idx - 1].setMap(null);
     polylinePath.splice(idx - 1, 1);

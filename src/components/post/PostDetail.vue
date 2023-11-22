@@ -14,6 +14,12 @@ const { postId } = route.params;
 
 const viewer = ref();
 const post = ref({});
+let latPath = [];
+
+let map;
+
+// 유저 아이디
+let userId = 1;
 
 onMounted(async () => {
   await detailPost(
@@ -25,6 +31,21 @@ onMounted(async () => {
       console.error(error);
     }
   );
+
+  // 카카오 맵 불러오기
+  if (window.kakao && window.kakao.maps) {
+    initMap();
+  } else {
+    const script = document.createElement("script");
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=${
+      import.meta.env.VITE_KAKAO_MAP_SERVICE_KEY
+    }&libraries=services,clusterer`;
+    /* global kakao */
+    script.onload = () => kakao.maps.load(() => initMap());
+    document.head.appendChild(script);
+  }
+
+  // Viewer 객체 생성
   viewer.value = new Viewer({
     // ref="toastViewer"
     el: document.querySelector("#viewer"),
@@ -33,6 +54,137 @@ onMounted(async () => {
     initialValue: post.value.content,
   });
 });
+
+const initMap = () => {
+  const container = document.getElementById("map");
+  const options = {
+    center: new kakao.maps.LatLng(37.496573, 127.035546),
+    level: 12,
+  };
+  map = new kakao.maps.Map(container, options);
+
+  kakao.maps.event.addListener(map);
+
+  window.oncontextmenu = function () {
+    return false;
+  };
+
+  post.value.attractionDtoList.forEach((data) => {
+    addMarker(data);
+  });
+};
+
+function addMarker(data) {
+  let position = new kakao.maps.LatLng(data.latitude, data.longitude);
+
+  var marker = new kakao.maps.Marker({
+    position: position,
+  });
+
+  marker.setMap(map);
+
+  addOverlay(marker, data);
+  latPath.push([data.latitude, data.longitude]);
+  if (latPath.length >= 2) {
+    setPolyline(data);
+  }
+}
+
+function setPolyline(data) {
+  let line = new kakao.maps.LatLng(data.latitude, data.longitude);
+
+  var tmpLine = [
+    line,
+    new kakao.maps.LatLng(
+      latPath[latPath.length - 2][0],
+      latPath[latPath.length - 2][1]
+    ),
+  ];
+
+  let polyline = new kakao.maps.Polyline({
+    path: tmpLine, // 선을 구성하는 좌표배열 입니다
+    strokeWeight: 5, // 선의 두께 입니다
+    strokeColor: "#FF0000", // 선의 색깔입니다
+    strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+    strokeStyle: "solid", // 선의 스타일입니다
+  });
+
+  polyline.setMap(map);
+}
+
+function addOverlay(marker, data) {
+  let content = document.createElement("div");
+  content.className = "wrap";
+
+  let info = document.createElement("div");
+  info.className = "info";
+
+  let title = document.createElement("div");
+  title.className = "title";
+  title.appendChild(document.createTextNode(data.name));
+
+  let closeDiv = document.createElement("div");
+  closeDiv.className = "close";
+  closeDiv.onclick = function () {
+    overlay.setMap(null);
+  };
+
+  let body = document.createElement("div");
+  body.className = "body";
+
+  let imgDiv = document.createElement("div");
+  imgDiv.className = "img";
+
+  let img = document.createElement("img");
+  img.src = data.image;
+  img.width = 73;
+  img.height = 70;
+
+  let desc = document.createElement("div");
+  desc.className = "desc";
+
+  let ellipsis = document.createElement("div");
+  ellipsis.className = "ellipsis";
+  ellipsis.appendChild(document.createTextNode(data.address));
+
+  desc.appendChild(ellipsis);
+  imgDiv.appendChild(img);
+
+  body.appendChild(imgDiv);
+  body.appendChild(desc);
+
+  title.appendChild(closeDiv);
+
+  info.appendChild(title);
+  info.appendChild(body);
+
+  content.appendChild(info);
+
+  var overlay = new kakao.maps.CustomOverlay({
+    content: content,
+    map: map,
+    position: marker.getPosition(),
+  });
+
+  overlay.setMap(null);
+
+  kakao.maps.event.addListener(marker, "mousedown", function (e) {
+    var isRightButton;
+    e = e || window.event;
+
+    if ("which" in e)
+      // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+      isRightButton = e.which == 3;
+    else if ("button" in e)
+      // IE, Opera
+      isRightButton = e.button == 2;
+
+    if (isRightButton) {
+      overlay.setMap(map);
+      e.stopPropagation();
+    }
+  });
+}
 
 const getPostDetail = () => {
   detailPost(
@@ -49,6 +201,13 @@ const getPostDetail = () => {
 
 const movePage = (param) => {
   router.push({ name: "post-" + param });
+};
+
+const joinPost = () => {
+  let postuserParam = {
+    postId: post.value.postId,
+    userId: 1,
+  };
 };
 </script>
 
@@ -99,86 +258,23 @@ const movePage = (param) => {
             />
           </v-col>
         </v-row>
+        <div id="map"></div>
         내용<br />
         <div style="height: 300px">
           <div id="viewer"></div>
           <br />
         </div>
-        Reply ({{ replyCount }})<br />
-        <v-simple-table dense>
-          <tbody>
-            <tr v-for="(reply, index) in replies" :key="index">
-              <td style="width: 110px; padding: 0" v-if="!isMobile()">
-                <v-icon small> mdi-account </v-icon>
-                {{ reply.writer }}
-              </td>
-              <td style="width: 40px; padding: 0" v-else>
-                <Tooltip
-                  bottom
-                  iconName="mdi-account"
-                  title="작성자"
-                  :content="reply.writer"
-                />
-              </td>
-              <td style="padding: 0">{{ reply.content }}</td>
-              <td style="width: 140px; padding: 0" v-if="!isMobile()">
-                {{ reply.regDttm }}
-              </td>
-              <td style="width: 40px; padding: 0" v-else>
-                <Tooltip
-                  bottom
-                  iconName="mdi-clock-outline"
-                  title="작성일시"
-                  :content="reply.regDttm"
-                />
-              </td>
-              <td style="width: 30px; padding: 0">
-                <Button
-                  @click="replyEdit(reply.replyNo, reply.content)"
-                  color="grey"
-                  icon
-                  xsmall
-                  iconName="mdi-pencil"
-                ></Button>
-              </td>
-              <td style="width: 30px; padding: 0">
-                <Button
-                  @click="replyDel(reply.replyNo)"
-                  color="red"
-                  icon
-                  xsmall
-                  iconName="mdi-close"
-                ></Button>
-              </td>
-            </tr>
-          </tbody>
-        </v-simple-table>
-        <v-divider></v-divider>
-        <v-row>
-          <v-col cols="12" md="11" style="padding: 0px 12px">
-            <v-textarea
-              clearable
-              clear-icon="mdi-close-circle"
-              rows="2"
-              no-resize
-              full-width
-              v-model="comment"
-            ></v-textarea>
-          </v-col>
-          <v-col md="1" align-self="center" style="padding: 0px 10px">
-            <Button
-              @click="replySave"
-              color="indigo"
-              rounded
-              small
-              iconName="mdi-pencil"
-              btnName="Save"
-            ></Button>
-          </v-col>
-        </v-row>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <Button
+          @click="movePage('/edit?docNo=' + docNo)"
+          color="primary"
+          rounded
+          small
+          iconName="mdi-account-multiple-plus"
+          btnName="Join"
+        ></Button>
         <Button
           @click="movePage('/edit?docNo=' + docNo)"
           color="warning"
@@ -208,3 +304,146 @@ const movePage = (param) => {
   </v-container>
 </template>
 <style scoped></style>
+<style>
+#map {
+  width: 100%;
+  height: 700px;
+}
+.map_wrap {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 350px;
+}
+.wrap {
+  position: absolute;
+  left: 0;
+  bottom: 40px;
+  width: 288px;
+  height: 132px;
+  margin-left: -144px;
+  text-align: left;
+  overflow: hidden;
+  font-size: 12px;
+  font-family: "Malgun Gothic", dotum, "돋움", sans-serif;
+  line-height: 1.5;
+}
+.wrap .info {
+  width: 286px;
+  height: 120px;
+  border-radius: 5px;
+  border-bottom: 2px solid #ccc;
+  border-right: 1px solid #ccc;
+  overflow: hidden;
+  background: #fff;
+}
+.wrap .info:nth-child(1) {
+  border: 0;
+  box-shadow: 0px 1px 2px #888;
+}
+.info .title {
+  padding: 5px 0 0 10px;
+  height: 30px;
+  background: #eee;
+  border-bottom: 1px solid #ddd;
+  font-size: 18px;
+  font-weight: bold;
+}
+.info .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #888;
+  width: 17px;
+  height: 17px;
+  background: url("https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/overlay_close.png");
+}
+.info .close:hover {
+  cursor: pointer;
+}
+.info .body {
+  position: relative;
+  overflow: hidden;
+}
+.info .desc {
+  position: relative;
+  margin: 13px 0 0 90px;
+  height: 75px;
+}
+.desc .ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desc .jibun {
+  font-size: 11px;
+  color: #888;
+  margin-top: -2px;
+}
+.info .img {
+  position: absolute;
+  top: 6px;
+  left: 5px;
+  width: 73px;
+  height: 71px;
+  border: 1px solid #ddd;
+  color: #888;
+  overflow: hidden;
+}
+.info:after {
+  content: "";
+  position: absolute;
+  margin-left: -12px;
+  left: 50%;
+  bottom: 0;
+  width: 22px;
+  height: 12px;
+  background: url("https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/vertex_white.png");
+}
+.info .link {
+  color: #5085bb;
+}
+
+.custom_typecontrol {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  overflow: hidden;
+  width: 130px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
+  font-size: 12px;
+  font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+}
+.custom_typecontrol span {
+  display: block;
+  width: 65px;
+  height: 30px;
+  float: right;
+  text-align: center;
+  line-height: 30px;
+  cursor: pointer;
+}
+.custom_typecontrol .btn {
+  background: #fff;
+  background: linear-gradient(#fff, #e6e6e6);
+}
+.custom_typecontrol .btn:hover {
+  background: #f5f5f5;
+  background: linear-gradient(#f5f5f5, #e3e3e3);
+}
+.custom_typecontrol .btn:active {
+  background: #e6e6e6;
+  background: linear-gradient(#e6e6e6, #fff);
+}
+.custom_typecontrol .selected_btn {
+  color: #fff;
+  background: #425470;
+  background: linear-gradient(#425470, #5b6d8a);
+}
+.custom_typecontrol .selected_btn:hover {
+  color: #fff;
+}
+</style>

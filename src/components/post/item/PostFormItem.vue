@@ -9,20 +9,41 @@ import "codemirror/lib/codemirror.css"; // codemirror style
 
 const router = useRouter();
 
-// 여행지 목록
-let travels = ref([]);
+// Request 할 객체
+
+let param = ref({
+  postDto: {
+    userId: 0,
+    region: "",
+    title: "",
+    content: "",
+    recruits: 0,
+    dateTime: toStringByFormatting(new Date()),
+  },
+  postAttractionDtoList: [],
+});
+
+let date = ref(new Date());
 
 let deleteIdx = ref(0);
 
 const editor = ref();
 
-const content = "";
+const content = ref("");
 
-const date = ref(new Date());
 watch(
   () => date.value,
   () => {
-    console.log(date.value);
+    console.log(toStringByFormatting(date.value));
+    param.value.postDto.dateTime = toStringByFormatting(date.value);
+  },
+  { deep: true }
+);
+
+watch(
+  () => param.value.postDto.dateTime,
+  () => {
+    console.log(param.value.postDto.dateTime);
   },
   { deep: true }
 );
@@ -37,7 +58,8 @@ onMounted(() => {
 });
 
 const travelCallback = function (travelPath) {
-  travels.value = travelPath.value;
+  param.value.postAttractionDtoList = travelPath.value;
+  console.log(param.value);
 };
 
 const changeIdx = function (idx) {
@@ -45,7 +67,7 @@ const changeIdx = function (idx) {
 };
 
 // 선택 지역을 받는 값
-const region = ref("");
+const region = ref("서울특별시");
 
 // 지역 선택 헤더
 const conditions = ref([
@@ -76,6 +98,22 @@ function save() {
 function back() {
   router.push({ name: "post-list" });
 }
+
+function leftPad(value) {
+  if (value >= 10) {
+    return value;
+  }
+
+  return `0${value}`;
+}
+
+function toStringByFormatting(source, delimiter = "-") {
+  const year = source.getFullYear();
+  const month = leftPad(source.getMonth() + 1);
+  const day = leftPad(source.getDate());
+
+  return [year, month, day].join(delimiter);
+}
 </script>
 
 <template>
@@ -83,13 +121,16 @@ function back() {
     <v-card elevation="5" outlined width="100%" style="padding: 3%">
       <v-row>
         <v-col cols="3">
-          <v-col v-for="(travel, idx) in travels" :key="idx">
+          <v-col
+            v-for="(travel, idx) in param.postAttractionDtoList"
+            :key="idx"
+          >
             <v-card class="mx-auto">
               <v-card-item>
                 <div>
                   <div class="text-overline mb-1">{{ idx + 1 }}번째 여행지</div>
                   <div class="text-h6 mb-1">
-                    {{ travel.title }}
+                    {{ travel.name }}
                   </div>
                   <div clss="text-caption">
                     {{ travel.address }}
@@ -119,8 +160,10 @@ function back() {
 
             <v-dialog width="400" height="600">
               <template v-slot:activator="{ props }">
-                <!-- <v-btn v-bind="props" text="Open Dialog"> </v-btn> -->
-                <span v-bind="props" @click="isActive.value = false">asd</span>
+                <v-btn v-bind="props" @click="isActive.value = false">
+                  {{ param.postDto.dateTime }}
+                </v-btn>
+                <!-- <span v-bind="props" @click="isActive.value = false">asd</span> -->
               </template>
 
               <template v-slot:default="{ isActive }">
@@ -139,6 +182,7 @@ function back() {
 
             <MapWrite
               :delete-idx="deleteIdx"
+              :region="region"
               @travel-path="travelCallback"
             ></MapWrite>
             <div id="editor"></div>

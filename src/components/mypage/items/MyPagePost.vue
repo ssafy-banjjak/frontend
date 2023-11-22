@@ -1,7 +1,9 @@
-<script setup></script>
+<script setup>
+import { ref, onMounted, watch } from "vue";
+</script>
 
 <template>
-  <div>반짝1</div>
+  <v-container> </v-container>
 </template>
 
 <style scoped></style>
