@@ -13,7 +13,7 @@ const props = defineProps({
     class="ma-2 pa-2 shadow"
     height="480"
     width="270"
-    :image="props.short.image"
+    :image="props.short.thumbnail"
   >
     <div class="card-description">
       <v-card-title>{{ props.short.title }} </v-card-title>

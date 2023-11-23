@@ -1,18 +1,7 @@
 import axios from "axios";
 import { httpStatusCode } from "./http-status";
 
-const { VITE_VUE_API_URL, VITE_ELECTRIC_CHARGING_STATION_URL } = import.meta.env;
-
-// station vue api axios instance
-function stationAxios() {
-  const instance = axios.create({
-    baseURL: VITE_ELECTRIC_CHARGING_STATION_URL,
-    headers: {
-      "Content-Type": "application/json;charset=utf-8",
-    },
-  });
-  return instance;
-}
+const { VITE_VUE_API_URL } = import.meta.env;
 
 // local vue api axios instance
 function localAxios() {
@@ -65,7 +54,7 @@ function localAxios() {
 
           // 에러가 발생했던 컴포넌트의 axios로 이동하고자하는 경우
           // 반드시 return을 붙여주어야한다.
-          return await instance.post("/user/refresh").then((response) => {
+          return await instance.post("/user/reissue").then((response) => {
             const newAccessToken = response.data.Authorization;
 
             instance.defaults.headers.common["Authorization"] = newAccessToken;
@@ -87,4 +76,4 @@ function localAxios() {
   return instance;
 }
 
-export { localAxios, stationAxios };
+export { localAxios };
