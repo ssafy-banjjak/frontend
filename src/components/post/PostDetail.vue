@@ -84,7 +84,10 @@ onMounted(async () => {
 const initMap = () => {
   const container = document.getElementById("map");
   const options = {
-    center: new kakao.maps.LatLng(37.496573, 127.035546),
+    center: new kakao.maps.LatLng(
+      post.value.attractionDtoList[0].latitude,
+      post.value.attractionDtoList[0].longitude
+    ),
     level: 8,
   };
   map = new kakao.maps.Map(container, options);
@@ -304,7 +307,7 @@ const deletePage = () => {
               label="모집인원"
               readonly
               dense
-              :model-value="post.recruits"
+              :model-value="`${post.peopleCnt}/${post.recruits}`"
               variant="underlined"
             />
           </v-col>

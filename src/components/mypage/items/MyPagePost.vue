@@ -37,7 +37,7 @@ onMounted(() => {
 
 function getPostList() {
   joinList(
-    userId,
+    userId.value,
     ({ data }) => {
       posts.value = data.data;
     },
