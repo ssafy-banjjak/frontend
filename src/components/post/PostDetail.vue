@@ -1,14 +1,21 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { deletePost, detailPost } from "@/api/post";
-import { joinPost } from "@/api/postuser";
+import { joinPost, unJoinPost, canJoinPost } from "@/api/postuser";
+import { useUserStore } from "@/store/user";
+import { storeToRefs } from "pinia";
+
 import Viewer from "@toast-ui/editor/dist/toastui-editor-viewer";
-import "codemirror/lib/codemirror.css"; // codemirror style
-import "@toast-ui/editor/dist/toastui-editor.css"; // Editor style
+import "codemirror/lib/codemirror.css";
+import "@toast-ui/editor/dist/toastui-editor.css";
 
 import Button from "./item/Button.vue";
 import router from "@/router";
+
+const userStore = useUserStore();
+const { userId } = storeToRefs(userStore);
+
 const route = useRoute();
 
 const { postId } = route.params;
@@ -24,14 +31,27 @@ let latPath = [];
 
 let map;
 
-// 유저 아이디
-let userId = 1;
+let isJoin = ref(false);
 
 onMounted(async () => {
   await detailPost(
     postId,
     ({ data }) => {
       post.value = data.data;
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+
+  await canJoinPost(
+    {
+      postId: postId,
+      userId: userId.value,
+    },
+    ({ data }) => {
+      console.log(data.data);
+      isJoin.value = data.data;
     },
     (error) => {
       console.error(error);
@@ -65,7 +85,7 @@ const initMap = () => {
   const container = document.getElementById("map");
   const options = {
     center: new kakao.maps.LatLng(37.496573, 127.035546),
-    level: 12,
+    level: 8,
   };
   map = new kakao.maps.Map(container, options);
 
@@ -192,26 +212,13 @@ function addOverlay(marker, data) {
   });
 }
 
-const getPostDetail = () => {
-  detailPost(
-    postId,
-    ({ data }) => {
-      post.value = data.data;
-      // console.log(post.value.content);
-    },
-    (error) => {
-      console.error(error);
-    }
-  );
-};
-
 const movePage = (param) => {
   router.push({ name: "post-" + param });
 };
 
 const moveJoin = () => {
   param.value.postId = post.value.postId;
-  param.value.userId = userId;
+  param.value.userId = userId.value;
   joinPost(
     param.value,
     ({ data }) => {
@@ -221,6 +228,22 @@ const moveJoin = () => {
       console.error(error);
     }
   );
+  router.go(0);
+};
+
+const moveUnJoin = () => {
+  param.value.postId = post.value.postId;
+  param.value.userId = userId.value;
+  unJoinPost(
+    param.value,
+    ({ data }) => {
+      console.log(data);
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+  router.go(0);
 };
 
 const deletePage = () => {
@@ -234,6 +257,8 @@ const deletePage = () => {
       console.error(error);
     }
   );
+  alert("글을 삭제하였습니다");
+  router.push({ name: "post-list" });
 };
 </script>
 
@@ -285,11 +310,12 @@ const deletePage = () => {
           </v-col>
         </v-row>
         <div id="map"></div>
-        내용<br />
-        <div style="height: 300px">
-          <div id="viewer"></div>
-          <br />
-        </div>
+        <v-card title="내용">
+          <div style="height: 300px">
+            <v-divider :thickness="1" class="border-opacity-25"></v-divider>
+            <div id="viewer" style="margin: 30px"></div>
+          </div>
+        </v-card>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
@@ -300,7 +326,16 @@ const deletePage = () => {
           small
           iconName="mdi-account-multiple-plus"
           btnName="Join"
-          v-if="userId != post.userId"
+          v-if="userId != post.userId && !isJoin"
+        ></Button>
+        <Button
+          @click="moveUnJoin"
+          color="primary"
+          rounded
+          small
+          iconName="mdi-account-multiple-minus"
+          btnName="UnJoin"
+          v-if="userId != post.userId && isJoin"
         ></Button>
         <Button
           @click="movePage('/edit?docNo=' + docNo)"
