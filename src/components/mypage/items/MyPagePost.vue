@@ -2,17 +2,21 @@
 import { ref, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { joinList } from "@/api/postuser";
+import { useUserStore } from "@/store/user";
+import { storeToRefs } from "pinia";
+
+const userStore = useUserStore();
+const { userId } = storeToRefs(userStore);
 
 const router = useRouter();
 
 let posts = ref([]);
 
-let userId = 2;
-
 const headers = ref([
   { title: "글 번호", align: "center", value: "postId" },
   { title: "제목", align: "start", value: "title" },
   { title: "작성자", align: "center", value: "username" },
+  { title: "지역", align: "center", value: "region" },
   { title: "모집인원", align: "center", value: "recruits" },
   { title: "작성일시", align: "center", value: "createDate" },
 ]);
