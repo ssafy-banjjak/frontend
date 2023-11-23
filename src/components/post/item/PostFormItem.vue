@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { writePost } from "@/api/post";
 
 import MapWrite from "../map/MapWrite.vue";
 import Editor from "@toast-ui/editor";
@@ -13,40 +14,19 @@ const router = useRouter();
 
 let param = ref({
   postDto: {
-    userId: 0,
-    region: "",
+    userId: 1,
+    region: "서울특별시",
     title: "",
     content: "",
     recruits: 0,
-    dateTime: toStringByFormatting(new Date()),
+    dateTime: new Date(),
   },
   postAttractionDtoList: [],
 });
 
-let date = ref(new Date());
-
 let deleteIdx = ref(0);
 
 const editor = ref();
-
-const content = ref("");
-
-watch(
-  () => date.value,
-  () => {
-    console.log(toStringByFormatting(date.value));
-    param.value.postDto.dateTime = toStringByFormatting(date.value);
-  },
-  { deep: true }
-);
-
-watch(
-  () => param.value.postDto.dateTime,
-  () => {
-    console.log(param.value.postDto.dateTime);
-  },
-  { deep: true }
-);
 
 onMounted(() => {
   editor.value = new Editor({
@@ -91,8 +71,19 @@ const conditions = ref([
 ]);
 
 function save() {
-  console.log(editor.value.getHTML());
-  content.value = editor.value.getHTML();
+  param.value.postDto.content = editor.value.getHTML();
+  param.value.postDto.dateTime = getToday(param.value.postDto.dateTime);
+  writePost(
+    param.value,
+    ({ data }) => {
+      console.log(data);
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+  console.log(param.value);
+  back();
 }
 
 function back() {
@@ -114,6 +105,14 @@ function toStringByFormatting(source, delimiter = "-") {
 
   return [year, month, day].join(delimiter);
 }
+
+function getToday(date) {
+  var year = date.getFullYear();
+  var month = ("0" + (1 + date.getMonth())).slice(-2);
+  var day = ("0" + date.getDate()).slice(-2);
+
+  return year + "-" + month + "-" + day;
+}
 </script>
 
 <template>
@@ -125,19 +124,13 @@ function toStringByFormatting(source, delimiter = "-") {
             v-for="(travel, idx) in param.postAttractionDtoList"
             :key="idx"
           >
-            <v-card class="mx-auto">
-              <v-card-item>
-                <div>
-                  <div class="text-overline mb-1">{{ idx + 1 }}번째 여행지</div>
-                  <div class="text-h6 mb-1">
-                    {{ travel.name }}
-                  </div>
-                  <div clss="text-caption">
-                    {{ travel.address }}
-                  </div>
-                </div>
-              </v-card-item>
-              <v-card-actions>
+            <v-card class="mx-auto" max-width="344">
+              <v-img :src="travel.image" height="200px" cover></v-img>
+              <v-card-title style="text-align: left">
+                {{ travel.name }}
+              </v-card-title>
+              <v-card-subtitle> {{ travel.address }} </v-card-subtitle>
+              <v-card-actions style="float: right">
                 <v-btn @click="changeIdx(idx)"> 삭제 </v-btn>
               </v-card-actions>
             </v-card>
@@ -147,7 +140,7 @@ function toStringByFormatting(source, delimiter = "-") {
           <v-row>
             <v-col cols="3">
               <v-select
-                v-model="region"
+                v-model="param.postDto.region"
                 label="지역"
                 :items="conditions"
                 item-title="text"
@@ -155,23 +148,25 @@ function toStringByFormatting(source, delimiter = "-") {
               ></v-select>
             </v-col>
             <v-col cols="9">
-              <v-text-field label="제목" variant="underlined"></v-text-field>
+              <v-text-field
+                label="제목"
+                variant="underlined"
+                v-model="param.postDto.title"
+              ></v-text-field>
             </v-col>
-
             <v-dialog width="400" height="600">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" @click="isActive.value = false">
-                  {{ param.postDto.dateTime }}
+                <v-btn v-bind="props" @click="isActive = false">
+                  {{ getToday(param.postDto.dateTime) }}
                 </v-btn>
-                <!-- <span v-bind="props" @click="isActive.value = false">asd</span> -->
               </template>
-
               <template v-slot:default="{ isActive }">
                 <v-card title="">
                   <v-row justify="center">
-                    <v-date-picker v-model="date"></v-date-picker>
+                    <v-date-picker
+                      v-model="param.postDto.dateTime"
+                    ></v-date-picker>
                   </v-row>
-
                   <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn text="닫기" @click="isActive.value = false"></v-btn>
@@ -179,10 +174,9 @@ function toStringByFormatting(source, delimiter = "-") {
                 </v-card>
               </template>
             </v-dialog>
-
             <MapWrite
               :delete-idx="deleteIdx"
-              :region="region"
+              :region="param.postDto.region"
               @travel-path="travelCallback"
             ></MapWrite>
             <div id="editor"></div>

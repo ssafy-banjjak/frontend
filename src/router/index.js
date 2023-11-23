@@ -23,6 +23,7 @@ const routes = [
     path: "/mypage",
     name: "mypage",
     component: () => import("@/views/MyPageView.vue"),
+    redirect: { name: "mypage-post" },
     children: [
       {
         path: "",

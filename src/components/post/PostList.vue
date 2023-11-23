@@ -13,7 +13,6 @@ const headers = ref([
   { title: "모집인원", align: "center", value: "recruits" },
   { title: "작성일시", align: "center", value: "createDate" },
 ]);
-const document = ref([]);
 const options = ref({
   multiSort: true,
   sortBy: [],

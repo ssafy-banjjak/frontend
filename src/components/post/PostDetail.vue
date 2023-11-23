@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { detailPost } from "@/api/post";
+import { deletePost, detailPost } from "@/api/post";
+import { joinPost } from "@/api/postuser";
 import Viewer from "@toast-ui/editor/dist/toastui-editor-viewer";
 import "codemirror/lib/codemirror.css"; // codemirror style
 import "@toast-ui/editor/dist/toastui-editor.css"; // Editor style
@@ -11,6 +12,11 @@ import router from "@/router";
 const route = useRoute();
 
 const { postId } = route.params;
+
+let param = ref({
+  postId: "",
+  userId: "",
+});
 
 const viewer = ref();
 const post = ref({});
@@ -203,11 +209,31 @@ const movePage = (param) => {
   router.push({ name: "post-" + param });
 };
 
-const joinPost = () => {
-  let postuserParam = {
-    postId: post.value.postId,
-    userId: 1,
-  };
+const moveJoin = () => {
+  param.value.postId = post.value.postId;
+  param.value.userId = userId;
+  joinPost(
+    param.value,
+    ({ data }) => {
+      console.log(data);
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+};
+
+const deletePage = () => {
+  console.log(post.value.postId);
+  deletePost(
+    post.value.postId,
+    ({ data }) => {
+      console.log(data);
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
 };
 </script>
 
@@ -268,12 +294,13 @@ const joinPost = () => {
       <v-card-actions>
         <v-spacer></v-spacer>
         <Button
-          @click="movePage('/edit?docNo=' + docNo)"
+          @click="moveJoin"
           color="primary"
           rounded
           small
           iconName="mdi-account-multiple-plus"
           btnName="Join"
+          v-if="userId != post.userId"
         ></Button>
         <Button
           @click="movePage('/edit?docNo=' + docNo)"
@@ -284,12 +311,13 @@ const joinPost = () => {
           btnName="Edit"
         ></Button>
         <Button
-          @click="del"
+          @click="deletePage"
           color="error"
           rounded
           small
           iconName="mdi-delete-forever"
           btnName="Delete"
+          v-if="userId == post.userId"
         ></Button>
         <Button
           @click="movePage('list')"

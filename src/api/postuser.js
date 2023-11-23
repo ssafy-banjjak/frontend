@@ -8,4 +8,10 @@ async function joinPost(param, success, fail) {
   console.log("userConfirm ok");
 }
 
-export { joinPost };
+async function joinList(userId, success, fail) {
+  console.log("param", userId);
+  await local.get(`/postuser/${userId}`).then(success).catch(fail);
+  console.log("userConfirm ok");
+}
+
+export { joinPost, joinList };
