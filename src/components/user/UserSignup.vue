@@ -1,6 +1,8 @@
 <script setup>
 import router from "@/router";
 import { ref } from "vue";
+import { userSignup } from "@/api/user.js";
+import { httpStatusCode } from "@/util/http-status";
 
 const user = ref({
   username: "",
@@ -18,18 +20,30 @@ const regions = [
   "광주광역시",
   "대전광역시",
   "울산광역시",
-  "세종특별자치시",
+  "세종시",
   "경기도",
-  "강원특별자치도",
+  "강원도",
   "충청북도",
   "전라남도",
+  "전라북도",
+  "충청남도",
   "경상북도",
   "경상남도",
-  "제주특별자치도",
+  "제주도",
 ];
 
-const signup = () => {
-  router.push({ name: "home" });
+const signup = async () => {
+  await userSignup(
+    user.value,
+    (response) => {
+      if (response.status === httpStatusCode.OK) {
+        router.push({ name: "home" });
+      }
+    },
+    () => {
+      alert("중복된 아이디입니다.");
+    }
+  );
 };
 </script>
 
@@ -49,6 +63,7 @@ const signup = () => {
           color="secondary"
           label="Password"
           variant="underlined"
+          type="password"
         ></v-text-field>
 
         <v-text-field
@@ -66,7 +81,7 @@ const signup = () => {
           variant="underlined"
         ></v-text-field>
         <v-select
-          v-model="user.area"
+          v-model="user.region"
           :items="regions"
           variant="underlined"
           label="Region"

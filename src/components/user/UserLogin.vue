@@ -1,18 +1,33 @@
 <script setup>
 import { ref } from "vue";
 import router from "@/router";
+import { useUserStore } from "@/store/user";
+import { storeToRefs } from "pinia";
 
+const userStore = useUserStore();
+const { isLogin } = storeToRefs(userStore);
+const { userLogin } = userStore;
+
+if (isLogin.value) {
+  router.push({ name: "home" });
+}
 const user = ref({
   username: "",
   password: "",
 });
 
-const signup = () => {
+const signup = async () => {
   router.push({ name: "signup" });
 };
 
-const login = () => {
-  router.push({ name: "home" });
+const login = async () => {
+  await userLogin(user.value);
+  console.log(isLogin.value);
+  if (isLogin.value) {
+    router.push({ name: "home" });
+  } else {
+    alert("로그인에 실패하였습니다.");
+  }
 };
 </script>
 
@@ -32,6 +47,7 @@ const login = () => {
           color="secondary"
           label="Password"
           variant="underlined"
+          type="password"
         ></v-text-field>
       </v-container>
 

@@ -1,14 +1,13 @@
 <script setup>
-import { useUserStore } from "@/store/user";
 import MyPage from "@/components/mypage/MyPage.vue";
+import { useUserStore } from "@/store/user";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const userStore = useUserStore();
-console.log(userStore.isLogin);
-console.log(isLogin);
-const isLogin = true;
-if (!isLogin) {
+const { isLogin } = storeToRefs(userStore);
+if (!isLogin.value) {
   router.push({ name: "login" });
 }
 </script>
