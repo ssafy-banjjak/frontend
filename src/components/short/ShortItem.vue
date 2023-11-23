@@ -36,20 +36,15 @@ onBeforeMount(async () => {
     await getUserInfo(
       userId.value,
       (response) => {
-        console.log(response);
         if (response.status === httpStatusCode.OK) {
-          console.log(response.data.data);
           userInfo.value = response.data.data;
-          console.log(userInfo.value);
         }
       },
       (error) => {
         console.log(error);
       }
     );
-    console.log(shorts.value.length);
     if (shorts.value.length == 0) {
-      console.log("hello");
       await getShortBySearchCond(
         { pageNo: pageNo.value, amount: 100, region: userInfo.value.region },
         (response) => {
@@ -57,7 +52,6 @@ onBeforeMount(async () => {
           shorts.value = nextShorts;
           shortIdx.value = 1;
           short.value = shorts.value[shortIdx.value];
-          console.log(shorts.value);
           nextId.value = shorts.value[shortIdx.value + 1].shortId;
           prevId.value = shorts.value[shortIdx.value - 1].shortId;
         },
@@ -77,9 +71,7 @@ onBeforeMount(async () => {
     await getShortById(
       { shortId: route.params.shortId },
       (response) => {
-        console.log(response.data);
         short.value = response.data.data;
-        console.log(short.value);
       },
       (error) => {
         localStorage(error);
@@ -89,8 +81,6 @@ onBeforeMount(async () => {
 });
 
 const like = async () => {
-  console.log("like");
-  console.log(short.value);
   await likeShort(
     short.value.shortId,
     () => {
@@ -103,7 +93,6 @@ const like = async () => {
 };
 
 const dislike = async () => {
-  console.log("dislike");
   await dislikeShort(
     short.value.shortId,
     () => {
@@ -120,10 +109,8 @@ const registShort = () => {
 };
 
 const toPrev = () => {
-  console.log("shortIdx", shortIdx.value);
   shortIdx.value = shortIdx.value - 1;
   if (shortIdx.value == 0) {
-    console.log("isLast", shortIdx.value);
     alert("처음입니다.");
     shortIdx.value = shortIdx.value + 1;
     router.push({ name: "short", params: { shortId: shortIdx.value } });
@@ -136,15 +123,12 @@ const toPrev = () => {
 const toNext = () => {
   shortIdx.value = shortIdx.value + 1;
   if (shortIdx.value == shorts.value.length - 1) {
-    console.log("isLast", shortIdx.value);
     alert("마지막 반짝입니다.");
 
     shortIdx.value = shortIdx.value - 1;
     router.push({ name: "short", params: { shortId: shortIdx.value } });
     return;
   }
-  console.log("shortIdx", shortIdx.value);
-  console.log("shortsLength", shorts.value.length);
   router.push({ name: "short", params: { shortId: nextId.value } });
 };
 </script>
