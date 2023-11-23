@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { listPost } from "@/api/post";
 import Button from "./item/Button.vue";
@@ -9,7 +9,8 @@ const router = useRouter();
 const headers = ref([
   { title: "글 번호", align: "center", value: "postId" },
   { title: "제목", align: "start", value: "title" },
-  { title: "작성자", align: "center", value: "username" },
+  { title: "작성자", align: "center", value: "nickname" },
+  { title: "지역", align: "center", value: "region" },
   { title: "모집인원", align: "center", value: "recruits" },
   { title: "작성일시", align: "center", value: "createDate" },
 ]);
@@ -21,10 +22,10 @@ const options = ref({
   itemsPerPage: 5,
 });
 
-const region = ref("");
 const footerOptions = ref([5, 10, 25]);
 const totalCount = ref(0);
 const loading = ref(false);
+
 const conditions = ref([
   { text: "서울특별시", value: "서울특별시" },
   { text: "인천광역시", value: "인천광역시" },
@@ -47,24 +48,19 @@ const conditions = ref([
 
 const posts = ref([]);
 
-const schType = ref("");
-const schVal = ref("");
+let param = ref({
+  region: "",
+  word: "",
+});
 
 onMounted(() => {
   getPostList();
+  console.log(posts.value);
 });
 
-watch(
-  () => region.value,
-  () => {
-    getPostList();
-  },
-  { deep: true }
-);
-
-const getPostList = () => {
-  listPost(
-    region.value,
+async function getPostList() {
+  await listPost(
+    param.value,
     ({ data }) => {
       posts.value = data.data;
       console.log(posts.value);
@@ -73,57 +69,7 @@ const getPostList = () => {
       console.error(error);
     }
   );
-};
-
-// const getBoardDataFromAPI = async (page, itemsPerPage, sort) => {
-//   try {
-//     const response = await getBoardListAPI({
-//       params: {
-//         schType: schType.value,
-//         schVal: schVal.value,
-//         page: page,
-//         rows: itemsPerPage,
-//         sort: encodeURIComponent(sort),
-//       },
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
-
-// const getBoardList = async () => {
-//   loading.value = true;
-
-//   try {
-//     const { sortBy, sortDesc, page, itemsPerPage } = options.value;
-//     let sort = [];
-
-//     if (sortBy.length > 0) {
-//       sort = sortBy.map((value, index) => {
-//         return (
-//           value.replace(/[A-Z]/g, (str) => "_" + str[0]).toUpperCase() +
-//           " " +
-//           (sortDesc[index] ? "desc" : "asc")
-//         );
-//       });
-//     } else {
-//       sort.push("DOC_NO desc");
-//     }
-
-//     const response = await getBoardDataFromAPI(page, itemsPerPage, sort);
-//     const items = response.data;
-//     const total = response.total;
-
-//     setTimeout(() => {
-//       loading.value = false;
-//       document.value = items;
-//       totalCount.value = total;
-//     }, 1000);
-//   } catch (error) {
-//     console.error(error);
-//   }
-// };
+}
 
 function movePost() {
   router.push({ name: "post-write" });
@@ -143,7 +89,7 @@ function moveDetail(event, item) {
         <v-row>
           <v-col align-self="end" cols="12" md="2">
             <v-select
-              v-model="region"
+              v-model="param.region"
               label="지역"
               :items="conditions"
               item-title="text"
@@ -152,7 +98,7 @@ function moveDetail(event, item) {
           </v-col>
           <v-col cols="12" md="8">
             <v-text-field
-              v-model="schVal"
+              v-model="param.word"
               label="검색어"
               single-line
               @keypress.enter.prevent="getPostList"

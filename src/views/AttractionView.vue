@@ -1,8 +1,18 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { searchAttraction } from "@/api/map";
+import { useUserStore } from "@/store/user";
+import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
+
 import Button from "@/components/post/item/Button.vue";
 
+const router = useRouter();
+const userStore = useUserStore();
+const { isLogin } = storeToRefs(userStore);
+if (!isLogin.value) {
+  router.push({ name: "login" });
+}
 const param = ref({
   word: "",
   region: "",
@@ -217,7 +227,7 @@ function enter(item) {
             v-model="param.word"
             label="검색어"
             single-line
-            @keypress.enter.prevent="enter"
+            @keypress.enter.prevent="search"
           ></v-text-field>
         </v-col>
         <v-col align-self="center">
@@ -231,23 +241,6 @@ function enter(item) {
             btnName="검색"
           ></Button>
         </v-col>
-        <!-- 
-        <v-col cols="5">
-          <v-select
-            v-model="region"
-            label="지역"
-            :items="conditions"
-            item-title="text"
-            item-value="value"
-          ></v-select>
-        </v-col>
-        <v-col cols="7">
-          <v-text-field
-            v-model="keyword"
-            label="키워드"
-            variant="underlined"
-          ></v-text-field>
-        </v-col> -->
         <div id="map"></div>
       </v-row>
     </v-card>
