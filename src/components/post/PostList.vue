@@ -22,7 +22,7 @@ const options = ref({
   itemsPerPage: 5,
 });
 
-const footerOptions = ref([5, 10, 25]);
+const footerOptions = ref([5, 10, 20]);
 const totalCount = ref(0);
 const loading = ref(false);
 
@@ -125,6 +125,7 @@ function moveDetail(event, item) {
               :items="posts"
               :options="options"
               :server-items-length="totalCount"
+              :items-per-page="5"
               :items-per-page-options="footerOptions"
               :loading="loading"
             >
