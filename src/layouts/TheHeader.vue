@@ -6,7 +6,7 @@ import { ref } from "vue";
 const { userId } = storeToRefs(useUserStore);
 //서버에서 랜덤하게 userId지역에 맞는 쇼츠 아이디 하나 가져오기.
 //예시로 1 => /short3.mp4
-const randomShortId = ref(2);
+const randomShortId = ref(28);
 </script>
 
 <template>

@@ -19,13 +19,14 @@ export const useUserStore = defineStore("userStore", () => {
     await userConfirm(
       loginUser,
       (response) => {
-        // console.log("login ok!!!!", response.status);
-        // console.log("login ok!!!!", httpStatusCode.CREATE);
-        if (response.status === httpStatusCode.CREATE) {
+        if (response.status === httpStatusCode.OK) {
           let { data } = response;
-          // console.log("data", data);
-          let accessToken = data["access-token"];
-          let refreshToken = data["refresh-token"];
+          console.log("data", data);
+          console.log(data.data);
+          let accessToken = data.data["accessToken"];
+          let refreshToken = data.data["refreshToken"];
+          userId.value = data.data.userId;
+          console.log(userId.value);
           console.log("accessToken", accessToken);
           console.log("refreshToken", refreshToken);
           isLogin.value = true;
@@ -35,7 +36,6 @@ export const useUserStore = defineStore("userStore", () => {
           sessionStorage.setItem("refreshToken", refreshToken);
           console.log("sessiontStorage에 담았다", isLogin.value);
         } else {
-          console.log("로그인 실패했다");
           isLogin.value = false;
           isLoginError.value = true;
           isValidToken.value = false;
@@ -54,7 +54,7 @@ export const useUserStore = defineStore("userStore", () => {
       decodeToken.userId,
       (response) => {
         if (response.status === httpStatusCode.OK) {
-          userInfo.value = response.data.userInfo;
+          userInfo.value = response.data.data;
           console.log("3. getUserInfo data >> ", response.data);
         } else {
           console.log("유저 정보 없음!!!!");

@@ -1,6 +1,21 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { createShort } from "@/api/short";
+import { useUserStore } from "@/store/user";
+import { storeToRefs } from "pinia";
+import { getUserInfo } from "@/api/user";
+import { httpStatusCode } from "@/util/http-status";
+
+const userStore = useUserStore();
+const userInfo = ref({
+  username: "",
+  password: "",
+  nickname: "",
+  name: "",
+  region: "",
+});
+const { userId } = storeToRefs(userStore);
 const router = useRouter();
 const title = ref(null);
 const content = ref(null);
@@ -8,18 +23,43 @@ const region = ref(null);
 const thumbnail = ref(null);
 const video = ref(null);
 
-const submit = () => {
+const submit = async () => {
+  await getUserInfo(
+    userId.value,
+    (response) => {
+      console.log(response);
+      if (response.status === httpStatusCode.OK) {
+        console.log(response.data.data);
+        userInfo.value = response.data.data;
+        console.log(userInfo.value);
+      }
+    },
+    (error) => {
+      console.log(error);
+    }
+  );
   const formData = new FormData();
   formData.append("title", title.value);
   formData.append("content", content.value);
-  formData.append("thumbnail", thumbnail.value);
-  formData.append("video", video.value);
+  console.log(thumbnail.value[0]);
+  formData.append("image", thumbnail.value[0]);
+  formData.append("video", video.value[0]);
+  formData.append("region", userInfo.value.region);
+  formData.append("userId", userId.value);
 
   //등록
-  const returnId = 3;
-
+  await createShort(
+    formData,
+    (response) => {
+      console.log(response);
+    },
+    (error) => {
+      console.log(error);
+    }
+  );
   //등록 후 이동
-  router.push({ name: "short", params: { shortId: returnId } });
+  // router.push({ name: "short", params: { shortId: returnId } });
+  router.push({ name: "home" });
 };
 
 const regions = [
@@ -30,14 +70,16 @@ const regions = [
   "광주광역시",
   "대전광역시",
   "울산광역시",
-  "세종특별자치시",
+  "세종시",
   "경기도",
-  "강원특별자치도",
+  "강원도",
   "충청북도",
   "전라남도",
+  "전라북도",
+  "충청남도",
   "경상북도",
   "경상남도",
-  "제주특별자치도",
+  "제주도",
 ];
 </script>
 

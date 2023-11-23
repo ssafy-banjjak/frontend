@@ -1,11 +1,35 @@
 <script setup>
-import { ref } from "vue";
-const user = ref({
-  username: "ssafy",
-  password: "1234",
-  nickname: "김싸피",
-  name: "차재환",
-  region: "서울특별시",
+import { ref, onBeforeMount } from "vue";
+import { useUserStore } from "@/store/user";
+import { storeToRefs } from "pinia";
+import { getUserInfo } from "@/api/user";
+import { httpStatusCode } from "@/util/http-status";
+
+const userStore = useUserStore();
+const userInfo = ref({
+  username: "",
+  password: "",
+  nickname: "",
+  name: "",
+  region: "",
+});
+const { userId } = storeToRefs(userStore);
+onBeforeMount(async () => {
+  console.log("onBeforeMount");
+  await getUserInfo(
+    userId.value,
+    (response) => {
+      console.log(response);
+      if (response.status === httpStatusCode.OK) {
+        console.log(response.data.data);
+        userInfo.value = response.data.data;
+        console.log(userInfo.value);
+      }
+    },
+    (error) => {
+      console.log(error);
+    }
+  );
 });
 </script>
 
@@ -19,7 +43,7 @@ const user = ref({
           class="mb-5 avatar"
         ></v-avatar>
         <v-text-field
-          v-model="user.nickname"
+          v-model="userInfo.nickname"
           color="secondary"
           label="Nickname"
           variant="plain"
@@ -31,7 +55,7 @@ const user = ref({
         <v-text-field
           hide-details
           class="mb-2"
-          v-model="user.name"
+          v-model="userInfo.name"
           color="secondary"
           label="Name"
           variant="underlined"
@@ -40,7 +64,7 @@ const user = ref({
         <v-text-field
           hide-details
           class="mb-2"
-          v-model="user.nickname"
+          v-model="userInfo.nickname"
           color="secondary"
           label="Nickname"
           variant="underlined"
@@ -49,7 +73,7 @@ const user = ref({
         <v-text-field
           hide-details
           class="mb-2"
-          v-model="user.username"
+          v-model="userInfo.username"
           color="secondary"
           label="Username"
           variant="underlined"
@@ -58,7 +82,7 @@ const user = ref({
         <v-text-field
           hide-details
           class="mb-2"
-          v-model="user.region"
+          v-model="userInfo.region"
           color="secondary"
           label="Region"
           variant="underlined"
