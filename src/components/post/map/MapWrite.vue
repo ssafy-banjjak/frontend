@@ -1,44 +1,89 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { deletePost, detailPost } from "@/api/post";
-import { joinPost } from "@/api/postuser";
-import Viewer from "@toast-ui/editor/dist/toastui-editor-viewer";
-import "codemirror/lib/codemirror.css"; // codemirror style
-import "@toast-ui/editor/dist/toastui-editor.css"; // Editor style
+import { ref, onMounted, defineEmits, watch } from "vue";
+import { listAttraction } from "@/api/map";
 
-import Button from "./item/Button.vue";
-import router from "@/router";
-const route = useRoute();
+const emit = defineEmits(["travelPath"]);
+const props = defineProps(["deleteIdx", "region"]);
 
-const { postId } = route.params;
+let idx;
 
-let param = ref({
-  postId: "",
-  userId: "",
+let attractions = ref([]);
+const param = ref({
+  region: "서울특별시",
 });
-
-const viewer = ref();
-const post = ref({});
-let latPath = [];
 
 let map;
 
-// 유저 아이디
-let userId = 1;
+// 폴리라인객체 배열
+let polylinePath = [];
+
+// 좌표 배열
+let latPath = [];
+
+// 마커 객체 배열
+let markers = [];
+
+// 선택 여행지 배열
+let travels = [];
+
+// emit을 위한 선택 여행지 배열
+let travelPath = ref([]);
+
+watch(
+  () => attractions.value,
+  () => {
+    var moveLocation = new kakao.maps.LatLng(
+      attractions.value[0].latitude,
+      attractions.value[0].longitude
+    );
+
+    map.panTo(moveLocation);
+  },
+  { deep: true }
+);
+
+watch(
+  () => travelPath,
+  () => {
+    emit("travelPath", travelPath);
+  },
+  { deep: true }
+);
+
+watch(
+  () => props.deleteIdx,
+  () => {
+    idx = props.deleteIdx;
+    chooseDel(idx);
+  },
+  { deep: true }
+);
+
+watch(
+  () => props.region,
+  async () => {
+    param.value.region = props.region;
+    await getAttraction();
+    deleteMarker();
+    deleteMap();
+    attractions.value.forEach((data) => {
+      addMarker(data);
+    });
+  },
+  { deep: true }
+);
 
 onMounted(async () => {
-  await detailPost(
-    postId,
+  await listAttraction(
+    param.value,
     ({ data }) => {
-      post.value = data.data;
+      attractions.value = data.data;
     },
     (error) => {
       console.error(error);
     }
   );
 
-  // 카카오 맵 불러오기
   if (window.kakao && window.kakao.maps) {
     initMap();
   } else {
@@ -50,22 +95,13 @@ onMounted(async () => {
     script.onload = () => kakao.maps.load(() => initMap());
     document.head.appendChild(script);
   }
-
-  // Viewer 객체 생성
-  viewer.value = new Viewer({
-    // ref="toastViewer"
-    el: document.querySelector("#viewer"),
-    height: "500px",
-    initialEditType: "'wysiwyg'",
-    initialValue: post.value.content,
-  });
 });
 
 const initMap = () => {
   const container = document.getElementById("map");
   const options = {
     center: new kakao.maps.LatLng(37.496573, 127.035546),
-    level: 12,
+    level: 9,
   };
   map = new kakao.maps.Map(container, options);
 
@@ -75,47 +111,22 @@ const initMap = () => {
     return false;
   };
 
-  post.value.attractionDtoList.forEach((data) => {
+  attractions.value.forEach((data) => {
     addMarker(data);
   });
 };
 
-function addMarker(data) {
-  let position = new kakao.maps.LatLng(data.latitude, data.longitude);
-
-  var marker = new kakao.maps.Marker({
-    position: position,
-  });
-
-  marker.setMap(map);
-
-  addOverlay(marker, data);
-  latPath.push([data.latitude, data.longitude]);
-  if (latPath.length >= 2) {
-    setPolyline(data);
-  }
-}
-
-function setPolyline(data) {
-  let line = new kakao.maps.LatLng(data.latitude, data.longitude);
-
-  var tmpLine = [
-    line,
-    new kakao.maps.LatLng(
-      latPath[latPath.length - 2][0],
-      latPath[latPath.length - 2][1]
-    ),
-  ];
-
-  let polyline = new kakao.maps.Polyline({
-    path: tmpLine, // 선을 구성하는 좌표배열 입니다
-    strokeWeight: 5, // 선의 두께 입니다
-    strokeColor: "#FF0000", // 선의 색깔입니다
-    strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
-    strokeStyle: "solid", // 선의 스타일입니다
-  });
-
-  polyline.setMap(map);
+// 관광지 목록 가져오기
+async function getAttraction() {
+  await listAttraction(
+    param.value,
+    ({ data }) => {
+      attractions.value = data.data;
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
 }
 
 function addOverlay(marker, data) {
@@ -192,145 +203,124 @@ function addOverlay(marker, data) {
   });
 }
 
-const getPostDetail = () => {
-  detailPost(
-    postId,
-    ({ data }) => {
-      post.value = data.data;
-      // console.log(post.value.content);
-    },
-    (error) => {
-      console.error(error);
-    }
-  );
-};
+/* 폴리라인 함수 시작 */
+function setPolyline(lat, lng) {
+  var line = new kakao.maps.LatLng(lat, lng);
+  var tmpLine = [
+    line,
+    new kakao.maps.LatLng(
+      latPath[latPath.length - 2][0],
+      latPath[latPath.length - 2][1]
+    ),
+  ];
+  var polyline = new kakao.maps.Polyline({
+    path: tmpLine, // 선을 구성하는 좌표배열 입니다
+    strokeWeight: 5, // 선의 두께 입니다
+    strokeColor: "#FF0000", // 선의 색깔입니다
+    strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+    strokeStyle: "solid", // 선의 스타일입니다
+  });
 
-const movePage = (param) => {
-  router.push({ name: "post-" + param });
-};
+  polyline.setMap(map);
+  polylinePath.push(polyline);
+}
 
-const moveJoin = () => {
-  param.value.postId = post.value.postId;
-  param.value.userId = userId;
-  joinPost(
-    param.value,
-    ({ data }) => {
-      console.log(data);
-    },
-    (error) => {
-      console.error(error);
-    }
-  );
-};
+function deleteLine() {
+  for (let i = 0; i < polylinePath.length; i++) {
+    polylinePath[i].setMap(null);
+  }
+  polylinePath = [];
+}
 
-const deletePage = () => {
-  console.log(post.value.postId);
-  deletePost(
-    post.value.postId,
-    ({ data }) => {
-      console.log(data);
-    },
-    (error) => {
-      console.error(error);
+/* 폴리라인 함수 끝 */
+
+/* 마커 함수 시작 */
+
+function addMarker(data) {
+  let position = new kakao.maps.LatLng(data.latitude, data.longitude);
+
+  var marker = new kakao.maps.Marker({
+    position: position,
+  });
+
+  kakao.maps.event.addListener(marker, "mousedown", function (e) {
+    var isRightButton;
+    e = e || window.event;
+
+    if ("which" in e) {
+      // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+      isRightButton = e.which == 3;
+    } else if ("button" in e) {
+      // IE, Opera
+      isRightButton = e.button == 2;
     }
-  );
-};
+
+    if (!isRightButton) {
+      if (travels.length > 4) {
+        alert("5개까지 등록할 수 있습니다!");
+        e.stopPropagation();
+      } else {
+        if (travels.includes(data)) {
+          alert("중복된 여행지 입니다!");
+          e.stopPropagation();
+        } else {
+          latPath.push([data.latitude, data.longitude]);
+          if (latPath.length >= 2) {
+            setPolyline(data.latitude, data.longitude);
+          }
+          travels.push(data);
+          travelPath.value.push(data);
+        }
+      }
+    }
+  });
+
+  marker.setMap(map);
+
+  addOverlay(marker, data);
+
+  markers.push(marker);
+}
+
+function deleteMarker() {
+  markers.forEach((data) => {
+    data.setMap(null);
+  });
+  markers = [];
+}
+
+/* 마커 함수 끝 */
+
+function deleteMap() {
+  deleteLine();
+  latPath = [];
+  travels = [];
+  travelPath.value.length = 0;
+}
+
+function chooseDel(idx) {
+  if (latPath.length > 1) {
+    polylinePath[idx - 1].setMap(null);
+    polylinePath.splice(idx - 1, 1);
+  }
+  latPath.splice(idx, 1);
+  travels.splice(idx, 1);
+  travelPath.value.splice(idx, 1);
+}
 </script>
 
 <template>
-  <v-container>
-    <v-card elevation="10" outlined width="100%" class="mx-auto">
-      <v-card-title>
-        <span class="mr-2">글 내용</span>
-      </v-card-title>
-      <v-card-text>
-        <v-row>
-          <v-col>
-            <v-text-field
-              label="제목"
-              readonly
-              dense
-              :model-value="post.title"
-              variant="underlined"
-            />
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-text-field
-              label="작성자"
-              readonly
-              dense
-              :model-value="post.username"
-              variant="underlined"
-            />
-          </v-col>
-          <v-col>
-            <v-text-field
-              label="출발일"
-              readonly
-              dense
-              :model-value="post.dateTime"
-              variant="underlined"
-            />
-          </v-col>
-          <v-col>
-            <v-text-field
-              label="모집인원"
-              readonly
-              dense
-              :model-value="post.recruits"
-              variant="underlined"
-            />
-          </v-col>
-        </v-row>
-        <div id="map"></div>
-        내용<br />
-        <div style="height: 300px">
-          <div id="viewer"></div>
-          <br />
-        </div>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <Button
-          @click="moveJoin"
-          color="primary"
-          rounded
-          small
-          iconName="mdi-account-multiple-plus"
-          btnName="Join"
-          v-if="userId != post.userId"
-        ></Button>
-        <Button
-          @click="movePage('/edit?docNo=' + docNo)"
-          color="warning"
-          rounded
-          small
-          iconName="mdi-pencil"
-          btnName="Edit"
-        ></Button>
-        <Button
-          @click="deletePage"
-          color="error"
-          rounded
-          small
-          iconName="mdi-delete-forever"
-          btnName="Delete"
-          v-if="userId == post.userId"
-        ></Button>
-        <Button
-          @click="movePage('list')"
-          color="grey darken-1"
-          rounded
-          small
-          iconName="mdi-arrow-left"
-          btnName="Back"
-        ></Button>
-      </v-card-actions>
-    </v-card>
-  </v-container>
+  <div class="map_wrap">
+    <div
+      id="map"
+      style="width: 100%; height: 100%; position: relative; overflow: hidden"
+    ></div>
+    <div class="custom_typecontrol radius_border">
+      <span id="initBtn" class="selected_btn" @click="deleteMap">초기화</span>
+    </div>
+  </div>
 </template>
+
 <style scoped></style>
 <style>
 #map {
