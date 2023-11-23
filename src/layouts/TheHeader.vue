@@ -3,10 +3,16 @@ import { useUserStore } from "@/store/user";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
 
-const { userId } = storeToRefs(useUserStore);
+const userStore = useUserStore();
+const { isLogin, userId } = storeToRefs(userStore);
+const { userLogout } = userStore;
+
 //서버에서 랜덤하게 userId지역에 맞는 쇼츠 아이디 하나 가져오기.
 //예시로 1 => /short3.mp4
 const randomShortId = ref(28);
+const logout = async () => {
+  userLogout(userId.value);
+};
 </script>
 
 <template>
@@ -29,6 +35,12 @@ const randomShortId = ref(28);
       >여행지 검색</router-link
     >
     <router-link :to="{ name: 'mypage' }" class="mx-2">마이페이지</router-link>
+    <router-link v-if="!isLogin" :to="{ name: 'login' }" class="mx-2"
+      >로그인</router-link
+    >
+    <router-link v-else @click="logout" :to="{ name: 'home' }" class="mx-2"
+      >로그아웃</router-link
+    >
   </v-app-bar>
 </template>
 
