@@ -52,8 +52,10 @@ onBeforeMount(async () => {
           shorts.value = nextShorts;
           shortIdx.value = 1;
           short.value = shorts.value[shortIdx.value];
-          nextId.value = shorts.value[shortIdx.value + 1].shortId;
-          prevId.value = shorts.value[shortIdx.value - 1].shortId;
+          if (shortIdx.value != shorts.value.length - 1)
+            nextId.value = shorts.value[shortIdx.value + 1].shortId;
+          if (shortIdx.value != 0)
+            prevId.value = shorts.value[shortIdx.value - 1].shortId;
         },
         (error) => {
           console.log(error);
@@ -63,8 +65,10 @@ onBeforeMount(async () => {
       short.value = shorts.value[shortIdx.value];
 
       console.log(shorts.value);
-      nextId.value = shorts.value[shortIdx.value + 1].shortId;
-      prevId.value = shorts.value[shortIdx.value - 1].shortId;
+      if (shortIdx.value != shorts.value.length - 1)
+        nextId.value = shorts.value[shortIdx.value + 1].shortId;
+      if (shortIdx.value != 0)
+        prevId.value = shorts.value[shortIdx.value - 1].shortId;
     }
   } else {
     console.log("shortId", route.params);
@@ -74,7 +78,7 @@ onBeforeMount(async () => {
         short.value = response.data.data;
       },
       (error) => {
-        localStorage(error);
+        console.log(error);
       }
     );
   }
@@ -109,26 +113,24 @@ const registShort = () => {
 };
 
 const toPrev = () => {
-  shortIdx.value = shortIdx.value - 1;
   if (shortIdx.value == 0) {
     alert("처음입니다.");
-    shortIdx.value = shortIdx.value + 1;
+    // shortIdx.value = shortIdx.value + 1;
     router.push({ name: "short", params: { shortId: shortIdx.value } });
 
     return;
   }
+  shortIdx.value = shortIdx.value - 1;
   router.push({ name: "short", params: { shortId: prevId.value } });
 };
 
 const toNext = () => {
-  shortIdx.value = shortIdx.value + 1;
   if (shortIdx.value == shorts.value.length - 1) {
     alert("마지막 반짝입니다.");
-
-    shortIdx.value = shortIdx.value - 1;
     router.push({ name: "short", params: { shortId: shortIdx.value } });
     return;
   }
+  shortIdx.value = shortIdx.value + 1;
   router.push({ name: "short", params: { shortId: nextId.value } });
 };
 </script>
@@ -141,8 +143,8 @@ const toNext = () => {
       width="450"
       height="800"
       loop
-      muted
       autoplay
+      style="background-color: gray"
     ></video>
     <div class="box d-flex justify-space-between">
       <div class="align-self-end desc ma-7">
